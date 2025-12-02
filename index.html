@@ -187,8 +187,6 @@
         .num { color: var(--number); }
         .line-num { color: #858585; margin-right: 20px; user-select: none; text-align: right; display: inline-block; width: 30px;}
 
-        /* 유튜브 숨김 */
-        #hidden-player { position: absolute; top: -9999px; left: -9999px; opacity: 0; }
     </style>
 </head>
 <body>
@@ -446,7 +444,7 @@
         // --- 4. 유튜브 API 및 싱크 ---
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('hidden-player', {
-                height: '1', width: '1',
+                height: '200', width: '200',
                 playerVars: { 
                     'autoplay': 1, 
                     'controls': 0,
