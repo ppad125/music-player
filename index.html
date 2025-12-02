@@ -338,7 +338,7 @@
 
         function tryPlayMusic(song) {
             // [중요 수정] 가사 비디오(lyrics)로 검색 + 없으면 audio
-            const searchQ = `${song.artistName} ${song.trackName} lyrics`;
+            const searchQ = `${song.artistName} ${song.trackName} audio`;
             
             if(player && player.loadPlaylist) {
                 player.loadPlaylist({
