@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VS Code Lyric Console (Final Fixed)</title>
+    <title>VS Code Lyric Console (Auto-Fix)</title>
     <style>
-        /* --- VS Code Dark Theme 스타일 --- */
+        /* --- 스타일 정의 --- */
         :root {
             --bg-color: #1e1e1e;
             --sidebar-color: #252526;
@@ -16,13 +16,12 @@
             --comment: #6a9955; 
             --class-name: #4ec9b0; 
             --method: #dcdcaa; 
-            --number: #b5cea8; 
             --statusbar: #007acc;
         }
 
         body {
             margin: 0;
-            background-color: var(--bg-color);
+            background-color: var(--bg-color); /* 배경색 강제 지정 */
             color: var(--text-color);
             font-family: 'Consolas', 'Courier New', monospace;
             display: flex;
@@ -31,14 +30,12 @@
             overflow: hidden;
         }
 
-        /* 메인 레이아웃: 사이드바 + 에디터 */
         #workspace {
             display: flex;
             flex: 1;
             overflow: hidden;
         }
 
-        /* 사이드바 */
         #sidebar {
             width: 300px;
             background-color: var(--sidebar-color);
@@ -46,19 +43,21 @@
             display: flex;
             flex-direction: column;
         }
+
         .sidebar-header {
             padding: 10px;
             font-size: 11px;
             font-weight: bold;
-            text-transform: uppercase;
             color: #bbb;
             display: flex;
             justify-content: space-between;
         }
+
         .search-box {
             padding: 10px;
             border-bottom: 1px solid #333;
         }
+
         input {
             width: 90%;
             background-color: #3c3c3c;
@@ -77,6 +76,7 @@
             padding: 0;
             margin: 0;
         }
+
         .song-item {
             padding: 8px 15px;
             cursor: pointer;
@@ -89,25 +89,25 @@
         .song-item:hover { background-color: #2a2d2e; }
         .song-item.active { background-color: #37373d; border-left-color: var(--keyword); }
 
-        /* 메인 영역 */
         #main-container {
             flex: 1;
             display: flex;
             flex-direction: column;
         }
 
-        /* 상단: 가짜 코드 에디터 */
         #editor-upper {
             flex: 4; 
             display: flex;
             flex-direction: column;
             border-bottom: 1px solid #333;
         }
+
         .tab-bar {
             background-color: #2d2d2d;
             height: 35px;
             display: flex;
         }
+
         .tab {
             background-color: var(--bg-color);
             padding: 0 15px;
@@ -117,6 +117,7 @@
             border-top: 2px solid var(--keyword);
             color: white;
         }
+
         #fake-code-area {
             flex: 1;
             padding: 10px 20px;
@@ -125,7 +126,6 @@
             line-height: 1.5;
         }
 
-        /* 하단: 터미널 (가사 출력) */
         #terminal-lower {
             flex: 6;
             background-color: var(--terminal-bg);
@@ -133,6 +133,7 @@
             flex-direction: column;
             border-top: 1px solid #333;
         }
+
         .terminal-tabs {
             display: flex;
             background-color: #252526;
@@ -141,6 +142,7 @@
             padding-left: 10px;
             border-bottom: 1px solid #333;
         }
+
         .terminal-tab {
             font-size: 11px;
             color: #888;
@@ -158,22 +160,23 @@
             white-space: pre-wrap;
             color: #cccccc;
         }
+
         .console-line {
             margin-bottom: 6px;
             display: flex;
             line-height: 1.4;
         }
-        .prompt { color: var(--keyword); margin-right: 10px; font-weight: bold; user-select: none;}
-        .lyrics-text { 
-            color: #ce9178;
-            transition: color 0.3s;
-        }
-        .lyrics-text.highlight { 
-            color: #fff; 
-            text-shadow: 0 0 5px rgba(255,255,255,0.3); 
-        }
 
-        /* 하단 상태바 */
+        .prompt { color: var(--keyword); margin-right: 10px; font-weight: bold; user-select: none;}
+        .lyrics-text { color: #ce9178; transition: color 0.3s; }
+        
+        .line-num { color: #858585; margin-right: 20px; user-select: none; text-align: right; display: inline-block; width: 30px;}
+        .kw { color: var(--keyword); }
+        .str { color: var(--string); }
+        .cmt { color: var(--comment); }
+        .cls { color: var(--class-name); }
+        .mth { color: var(--method); }
+
         #status-bar {
             height: 22px;
             background-color: var(--statusbar);
@@ -184,16 +187,6 @@
             padding: 0 10px;
             justify-content: space-between;
         }
-
-        /* 유틸 */
-        .kw { color: var(--keyword); }
-        .str { color: var(--string); }
-        .cmt { color: var(--comment); }
-        .cls { color: var(--class-name); }
-        .mth { color: var(--method); }
-        .num { color: var(--number); }
-        .line-num { color: #858585; margin-right: 20px; user-select: none; text-align: right; display: inline-block; width: 30px;}
-
     </style>
 </head>
 <body>
@@ -251,7 +244,7 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
-        // --- 1. 더미 코드 (디자인) ---
+        // --- 1. 더미 코드 렌더링 ---
         const dummyCode = [
             `<span class="kw">package</span> com.vscode.music;`,
             ``,
@@ -264,7 +257,7 @@
             `        <span class="cls">AudioStream</span> stream = <span class="kw">new</span> <span class="cls">AudioStream</span>();`,
             `        stream.<span class="mth">connect</span>(<span class="str">"YouTube_Server"</span>);`,
             ``,
-            `        <span class="cmt">// 2. 자동 우회 접속 시도...</span>`,
+            `        <span class="cmt">// 2. 자동 우회 접속 시스템 가동</span>`,
             `        <span class="kw">try</span> {`,
             `            stream.<span class="mth">play</span>();`,
             `        } <span class="kw">catch</span> (<span class="cls">CopyrightException</span> e) {`,
@@ -284,7 +277,7 @@
         }
         renderDummyCode();
 
-        // --- 2. 핵심 로직 ---
+        // --- 2. 로직 변수 ---
         let lyricsData = [];
         let player;
         let syncInterval;
@@ -347,6 +340,7 @@
             printToConsole(`> Loading: ${song.trackName}...`);
             updateStatus(`Loading ${song.trackName}...`);
 
+            // 1. 처음엔 'audio' 모드로 시도
             tryPlayMusic(song, false);
         }
 
@@ -357,6 +351,7 @@
                 return;
             }
             
+            // 모드에 따라 검색어 변경
             let searchKeyword = useLyricsMode ? 'lyrics' : 'audio';
             const searchQ = `${song.artistName} ${song.trackName} ${searchKeyword}`;
             
@@ -373,6 +368,7 @@
 
                 if(loadTimeout) clearTimeout(loadTimeout);
                 loadTimeout = setTimeout(() => {
+                    // 시작 안 하면 수동 버튼 표시
                     if(player.getPlayerState() !== 1 && player.getPlayerState() !== 3) {
                          printManualPlayButton();
                     }
@@ -470,7 +466,7 @@
             currentSyllableTimeouts = [];
         }
 
-        // --- 4. 유튜브 API & 에러 핸들링 ---
+        // --- 4. 유튜브 API & 자동 우회 로직 ---
         let playerReady = false;
         
         function onYouTubeIframeAPIReady() {
@@ -501,14 +497,14 @@
         function onPlayerError(event) {
             if (!currentSongInfo) return;
 
-            // 150(101) 에러: 저작권 막힘 -> Lyrics 버전으로 자동 우회
+            // [자동 우회 핵심] 150/101 에러 감지 시 -> Lyrics 모드로 전환
             if (event.data === 150 || event.data === 101) {
                 if (!isRetrying) {
-                    printToConsole("! Embedding blocked. Trying Lyrics version...");
+                    printToConsole("! Embedding blocked by owner. Trying Lyrics version...");
                     isRetrying = true; 
-                    tryPlayMusic(currentSongInfo, true);
+                    tryPlayMusic(currentSongInfo, true); // True = Lyrics 모드
                 } else {
-                    printToConsole("ERROR: Even the lyrics version is blocked. Sorry.");
+                    printToConsole("ERROR: Even the lyrics version is blocked.");
                 }
             } 
             else if(event.data === 2) {
