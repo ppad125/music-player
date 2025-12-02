@@ -3,221 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>코드로 보는 가사 - Lyric Code</title>
+    <title>Lyric.java - 코드로 보는 가사</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* --- 기본 설정 --- */
-        :root {
-            --bg-color: #0d1117; /* 깃허브 다크 배경 */
-            --text-main: #ffffff;
-            --text-sub: #8b949e;
-            --accent-blue: #58a6ff;
-            --accent-green: #238636;
-            --accent-purple: #bc8cff;
-            --code-bg: #161b22;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
-        }
-
-        /* --- 배경 효과 (은은한 빛) --- */
-        .background-glow {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(88, 166, 255, 0.15) 0%, rgba(0,0,0,0) 70%);
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: -1;
-            animation: pulse 5s infinite alternate;
-        }
-
-        /* --- 네비게이션 --- */
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 40px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .logo {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--accent-blue);
-        }
-        .nav-links a {
-            color: var(--text-sub);
-            text-decoration: none;
-            margin-left: 20px;
-            font-size: 0.9rem;
-            transition: color 0.3s;
-        }
+        /* (스타일은 기존과 동일합니다) */
+        :root { --bg-color: #0d1117; --text-main: #ffffff; --text-sub: #8b949e; --accent-blue: #58a6ff; --code-bg: #161b22; }
+        body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
+        .background-glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(88, 166, 255, 0.15) 0%, rgba(0,0,0,0) 70%); top: -100px; left: 50%; transform: translateX(-50%); z-index: -1; animation: pulse 5s infinite alternate; }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; font-family: 'JetBrains Mono', monospace; }
+        .logo { font-size: 1.2rem; font-weight: 700; color: var(--accent-blue); }
+        .nav-links a { color: var(--text-sub); text-decoration: none; margin-left: 20px; font-size: 0.9rem; transition: color 0.3s; }
         .nav-links a:hover { color: var(--text-main); }
-
-        /* --- 메인 히어로 섹션 --- */
-        .hero {
-            height: 80vh; /* 화면 높이의 80% */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            position: relative;
-        }
-
-        .hero h1 {
-            font-size: 4rem; /* 매우 큰 제목 */
-            line-height: 1.1;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #fff 0%, #8b949e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 900;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--text-sub);
-            margin-bottom: 40px;
-            max-width: 600px;
-            line-height: 1.6;
-        }
-
-        /* --- 버튼 스타일 --- */
-        .cta-group {
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none; /* a 태그용 */
-            display: inline-block;
-        }
-
-        /* 체험하기 버튼 (Primary) */
-        .btn-primary {
-            background-color: var(--accent-blue);
-            color: #fff;
-            border: none;
-            box-shadow: 0 4px 15px rgba(88, 166, 255, 0.4);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(88, 166, 255, 0.6);
-        }
-
-        /* 공유하기 버튼 (Secondary) */
-        .btn-secondary {
-            background-color: transparent;
-            color: var(--text-main);
-            border: 1px solid #30363d;
-        }
-        .btn-secondary:hover {
-            border-color: var(--text-sub);
-            background-color: #21262d;
-        }
-
-        /* --- 떠다니는 코드 창 (Visual Element) --- */
-        .code-window {
-            margin-top: 60px;
-            background: var(--code-bg);
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            padding: 20px;
-            width: 500px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            font-family: 'JetBrains Mono', monospace;
-            text-align: left;
-            position: relative;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        /* 윈도우 상단 점 3개 */
-        .window-controls {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
+        .hero { height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .hero h1 { font-size: 4rem; margin-bottom: 20px; background: linear-gradient(135deg, #fff 0%, #8b949e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+        .hero p { font-size: 1.2rem; color: var(--text-sub); margin-bottom: 40px; max-width: 600px; line-height: 1.6; }
+        .btn { padding: 15px 30px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; border: none; }
+        .btn-primary { background-color: var(--accent-blue); color: #fff; box-shadow: 0 4px 15px rgba(88, 166, 255, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(88, 166, 255, 0.6); }
+        .btn-secondary { background-color: transparent; color: var(--text-main); border: 1px solid #30363d; margin-left: 10px; }
+        .btn-secondary:hover { background-color: #21262d; }
+        .code-window { margin-top: 60px; background: var(--code-bg); border: 1px solid #30363d; border-radius: 10px; padding: 20px; width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); font-family: 'JetBrains Mono', monospace; text-align: left; animation: float 6s ease-in-out infinite; }
+        .window-controls { display: flex; gap: 8px; margin-bottom: 15px; }
         .dot { width: 12px; height: 12px; border-radius: 50%; }
-        .red { background-color: #ff5f56; }
-        .yellow { background-color: #ffbd2e; }
-        .green { background-color: #27c93f; }
-
-        /* 코드 문법 강조 */
+        .red { background-color: #ff5f56; } .yellow { background-color: #ffbd2e; } .green { background-color: #27c93f; }
         .line { display: block; margin-bottom: 5px; font-size: 0.9rem; }
-        .kwd { color: var(--accent-purple); } /* 키워드 */
-        .str { color: #a5d6ff; } /* 문자열 */
-        .func { color: #d2a8ff; } /* 함수 */
-        .cursor {
-            display: inline-block;
-            width: 2px;
-            height: 1.2em;
-            background-color: var(--accent-blue);
-            vertical-align: bottom;
-            animation: blink 1s step-end infinite;
-        }
-
-        /* --- 애니메이션 정의 --- */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
-        }
+        .kwd { color: #bc8cff; } .str { color: #a5d6ff; } .func { color: #d2a8ff; }
+        .cursor { display: inline-block; width: 2px; height: 1.2em; background-color: var(--accent-blue); vertical-align: bottom; animation: blink 1s step-end infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
         @keyframes blink { 50% { opacity: 0; } }
         @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        /* 모바일 대응 */
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            .code-window { width: 90%; }
-            .cta-group { flex-direction: column; }
-        }
-
     </style>
 </head>
 <body>
-
     <div class="background-glow"></div>
-
     <nav>
         <div class="logo">&lt;Lyric.java /&gt;</div>
         <div class="nav-links">
-            <a href="#">About</a>
-            <a href="#">GitHub</a>
+            <a href="https://github.com/ppad125/music-player" target="_blank">GitHub</a>
         </div>
     </nav>
-
     <main class="hero">
         <h1>코드로 보는 가사</h1>
-        <p>
-            좋아하는 음악을 개발자의 언어로 재해석하세요.<br>
-            음절 단위 싱크와 VS Code 감성이 만난 새로운 경험.
-        </p>
-
-        <div class="cta-group">
-            <button class="btn btn-primary" onclick="goToPlayer()">지금 체험하기</button>
-            <button class="btn btn-secondary" onclick="alert('준비 중인 기능입니다!')">나만의 Lyric 공유하기</button>
+        <p>좋아하는 음악을 개발자의 언어로 재해석하세요.<br>음절 단위 싱크와 VS Code 감성이 만난 새로운 경험.</p>
+        <div>
+            <button class="btn btn-primary" onclick="location.href='player.html'">지금 시작하기</button>
+            <button class="btn btn-secondary" onclick="alert('친구에게 이 사이트 주소를 공유해보세요!')">공유하기</button>
         </div>
-
         <div class="code-window">
-            <div class="window-controls">
-                <div class="dot red"></div>
-                <div class="dot yellow"></div>
-                <div class="dot green"></div>
-            </div>
+            <div class="window-controls"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
             <div class="code-content">
                 <span class="line"><span class="kwd">class</span> Emotion {</span>
                 <span class="line">&nbsp;&nbsp;<span class="kwd">void</span> playMusic() {</span>
@@ -228,18 +61,5 @@
             </div>
         </div>
     </main>
-
-    <script>
-        // 체험하기 버튼 기능
-        function goToPlayer() {
-            // 나중에 실제 플레이어 파일을 player.html로 저장하고
-            // 아래 주석을 풀면 페이지가 이동됩니다.
-            location.href = 'player.html'; 
-            
-            // 지금은 임시로 알림창
-            alert('이전의 플레이어 코드를 player.html로 저장하고 연결하면 됩니다!');
-        }
-    </script>
 </body>
 </html>
-
