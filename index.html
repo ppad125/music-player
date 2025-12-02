@@ -241,10 +241,14 @@
 
     <div id="status-bar">
         <div id="status-left">Ready</div>
-        <div id="status-right">Java 17 • UTF-8 • 🚀</div>
+        <div id="status-right">Java 17 • UTF-8 • 🚀 • <span id="player-status">Player: Initializing...</span></div>
     </div>
 
-    <div id="hidden-player" style="position: absolute; left: -9999px;"></div>
+    <!-- YouTube Player (숨기지 않고 작게 표시) -->
+    <div style="position: fixed; bottom: 25px; right: 10px; width: 300px; height: 200px; z-index: 1000; border: 2px solid #007acc; background: #1e1e1e;">
+        <div id="hidden-player"></div>
+    </div>
+    
     <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
@@ -347,9 +351,16 @@
         }
 
         function tryPlayMusic(song) {
+            if (!playerReady) {
+                printToConsole("> Waiting for YouTube Player...");
+                setTimeout(() => tryPlayMusic(song), 1000);
+                return;
+            }
+            
             const searchQ = `${song.artistName} ${song.trackName} audio`;
             
             if(player && player.loadPlaylist) {
+                printToConsole(`> Searching YouTube: ${searchQ}`);
                 player.loadPlaylist({
                     listType: 'search',
                     list: searchQ,
@@ -469,21 +480,35 @@
         }
 
         // --- 4. 유튜브 API ---
+        let playerReady = false;
+        
         function onYouTubeIframeAPIReady() {
+            console.log('YouTube API Ready');
+            document.getElementById('player-status').textContent = 'Player: Loading...';
+            
             player = new YT.Player('hidden-player', {
                 height: '200', 
-                width: '200',
+                width: '300',
                 videoId: 'M7lc1UVf-VE', 
                 playerVars: { 
                     'autoplay': 0,
                     'controls': 1,
-                    'origin': window.location.origin 
+                    'origin': window.location.origin,
+                    'enablejsapi': 1
                 },
                 events: {
+                    'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange,
                     'onError': onPlayerError
                 }
             });
+        }
+        
+        function onPlayerReady(event) {
+            playerReady = true;
+            console.log('Player Ready!');
+            document.getElementById('player-status').textContent = 'Player: Ready ✓';
+            printToConsole("> YouTube Player initialized successfully!");
         }
 
         function onPlayerError(event) {
