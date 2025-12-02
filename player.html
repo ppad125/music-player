@@ -2,9 +2,9 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>VS Code Lyric Console</title>
+    <title>Music Player V3 (Final Fix)</title>
     <style>
-        /* (스타일은 완벽하니 그대로 둡니다) */
+        /* (스타일은 그대로 유지) */
         :root { --bg-color: #1e1e1e; --sidebar-color: #252526; --terminal-bg: #1e1e1e; --text-color: #d4d4d4; --keyword: #569cd6; --string: #ce9178; --comment: #6a9955; --class-name: #4ec9b0; --method: #dcdcaa; --number: #b5cea8; --statusbar: #007acc; }
         body { margin: 0; background-color: var(--bg-color); color: var(--text-color); font-family: 'Consolas', 'Courier New', monospace; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #workspace { display: flex; flex: 1; overflow: hidden; }
@@ -31,10 +31,25 @@
         .lyrics-text { color: #ce9178; transition: color 0.3s; }
         #status-bar { height: 22px; background-color: var(--statusbar); color: white; font-size: 12px; display: flex; align-items: center; padding: 0 10px; justify-content: space-between; }
         .kw { color: var(--keyword); } .str { color: var(--string); } .cmt { color: var(--comment); } .cls { color: var(--class-name); } .mth { color: var(--method); } .num { color: var(--number); } .line-num { color: #858585; margin-right: 20px; user-select: none; text-align: right; display: inline-block; width: 30px;}
-        
-        /* 돌아가기 버튼 */
         .back-btn { position: absolute; top: 5px; right: 10px; background: #333; color: #fff; border: none; padding: 5px 10px; cursor: pointer; z-index: 100; font-family: inherit; font-size: 12px; }
         .back-btn:hover { background: #555; }
+        
+        /* 플레이어 컨테이너 스타일 */
+        #player-container {
+            position: fixed; 
+            bottom: 25px; 
+            right: 10px; 
+            width: 300px; 
+            height: 200px; 
+            z-index: 1000; 
+            border: 2px solid #007acc; 
+            background: #000; /* 배경을 검정으로 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #555;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -53,14 +68,14 @@
             </div>
             <div id="terminal-lower">
                 <div class="terminal-tabs"><div class="terminal-tab">PROBLEMS</div><div class="terminal-tab">OUTPUT</div><div class="terminal-tab active">DEBUG CONSOLE</div><div class="terminal-tab">TERMINAL</div></div>
-                <div id="console-output"><div class="console-line"><span class="prompt">player $</span><span>Waiting for input...</span></div></div>
+                <div id="console-output"><div class="console-line"><span class="prompt">player $</span><span>System Ready. Please select a song.</span></div></div>
             </div>
         </div>
     </div>
-    <div id="status-bar"><div id="status-left">Ready</div><div id="status-right">Java 17 • UTF-8 • 🚀 • <span id="player-status">Initializing...</span></div></div>
+    <div id="status-bar"><div id="status-left">Ready</div><div id="status-right">Java 17 • UTF-8 • 🚀</div></div>
 
-    <div id="player-container" style="position: fixed; bottom: 25px; right: 10px; width: 300px; height: 200px; z-index: 1000; border: 2px solid #007acc; background: #1e1e1e;">
-        <div id="hidden-player-placeholder"></div>
+    <div id="player-container">
+        <span>No Video Selected</span>
     </div>
     
     <script src="https://www.youtube.com/iframe_api"></script>
@@ -73,7 +88,7 @@
 
     // --- 2. 로직 ---
     let lyricsData = [];
-    let player;
+    let player; // 유튜브 플레이어 객체
     let syncInterval;
     let lastPrintedIndex = -1;
     let currentSyllableTimeouts = [];
@@ -115,40 +130,53 @@
         consoleOut.innerHTML = ''; 
         printToConsole(`> Loading: ${song.trackName}...`);
         
-        // [핵심] 플레이어 강제 주입
+        // 재생 시도
         tryPlayMusic(song);
     }
 
-    // [완전히 바뀐 재생 함수]
+    // [최종 수정된 재생 함수]
+    // 복잡한 자바스크립트 명령 대신, 그냥 HTML 태그를 통째로 갈아 끼웁니다.
     function tryPlayMusic(song) {
-        // 1. 기존 플레이어 연결 끊기
+        // 기존 플레이어가 있다면 메모리 해제 시도
         if(player && typeof player.destroy === 'function') {
             try { player.destroy(); } catch(e){}
         }
 
-        // 2. 검색어 안전하게 인코딩 (특수문자 에러 방지)
+        // 검색어 생성 (한글 깨짐 방지 처리)
         const searchQ = encodeURIComponent(`${song.artistName} ${song.trackName} audio`);
-        printToConsole(`> Searching & Playing: ${song.artistName} - ${song.trackName}`);
+        printToConsole(`> Searching: ${song.artistName} - ${song.trackName}`);
 
-        // 3. Iframe 태그를 직접 만들어서 꽂아넣기 (Error 2 원천 차단)
+        // 플레이어 컨테이너 가져오기
         const container = document.getElementById('player-container');
-        // 'enablejsapi=1'이 있어야 나중에 가사 싱크를 맞출 수 있음
-        const iframeHTML = `<iframe id="hidden-player-placeholder" width="300" height="200" src="https://www.youtube.com/embed?listType=search&list=${searchQ}&autoplay=1&controls=1&enablejsapi=1&origin=${window.location.origin}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
         
-        container.innerHTML = iframeHTML;
+        // Iframe 태그 직접 주입 (이 방식은 에러가 날 수 없습니다)
+        // src 주소에 listType=search 와 list=검색어 를 직접 넣습니다.
+        container.innerHTML = `
+            <iframe 
+                id="youtube-iframe" 
+                width="100%" 
+                height="100%" 
+                src="https://www.youtube.com/embed?listType=search&list=${searchQ}&autoplay=1&controls=1&enablejsapi=1&origin=${window.location.origin}" 
+                frameborder="0" 
+                allow="autoplay; encrypted-media" 
+                allowfullscreen>
+            </iframe>`;
 
-        // 4. 새 Iframe에 유튜브 기능 연결 (0.5초 뒤)
+        printToConsole("> Player injected. Waiting for API...");
+
+        // 유튜브 API 연결 (가사 싱크를 위해 필요)
+        // 약간의 지연 시간을 줘서 iframe이 로딩된 후 연결
         setTimeout(() => {
-            player = new YT.Player('hidden-player-placeholder', {
+            player = new YT.Player('youtube-iframe', {
                 events: {
                     'onStateChange': onPlayerStateChange,
-                    'onError': (e) => printToConsole("YouTube Error: " + e.data)
+                    'onError': (e) => printToConsole("YouTube Error Code: " + e.data)
                 }
             });
-        }, 500);
+        }, 1000);
     }
 
-    // --- 가사 및 동기화 ---
+    // --- 가사 파싱 및 싱크 ---
     function parseLrc(lrc) {
         const lines = [];
         const regex = /\[(\d+):(\d+\.\d+)\](.*)/;
@@ -190,7 +218,7 @@
         currentSyllableTimeouts = [];
     }
 
-    // --- 유튜브 이벤트 ---
+    // --- 싱크 조절 ---
     function onPlayerStateChange(event) {
         if (event.data == YT.PlayerState.PLAYING) {
             document.getElementById('status-right').innerText = "Running (Music On) 🎵";
@@ -203,7 +231,9 @@
     }
 
     function checkSync() {
+        // player 객체가 있고, getCurrentTime 함수가 살아있을 때만 실행
         if(!player || typeof player.getCurrentTime !== 'function' || lyricsData.length === 0) return;
+        
         const currentTime = player.getCurrentTime();
         let activeIndex = -1;
         for(let i = 0; i < lyricsData.length; i++) {
