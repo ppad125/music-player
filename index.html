@@ -282,7 +282,8 @@
         let syncInterval;
         let lastPrintedIndex = -1;
         let currentTypeWriterTimeout = null;
-        let loadTimeout = null; // 로딩 지연 체크용
+        let loadTimeout = null; 
+        let currentSongInfo = null; // 현재 선택된 곡 정보 저장용 (중요!)
 
         function handleEnter(e) { if(e.key === 'Enter') searchMusic(); }
 
@@ -322,21 +323,27 @@
         }
 
         function loadSong(song) {
+            currentSongInfo = song; // 재시도를 위해 정보 저장
             lyricsData = parseLrc(song.syncedLyrics);
             lastPrintedIndex = -1; 
             if(currentTypeWriterTimeout) clearTimeout(currentTypeWriterTimeout);
             if(loadTimeout) clearTimeout(loadTimeout);
 
             const consoleOut = document.getElementById('console-output');
-            consoleOut.innerHTML = ''; // 콘솔 초기화
+            consoleOut.innerHTML = ''; 
             
             printToConsole(`> Loading: ${song.trackName}...`);
             updateStatus(`Loading ${song.trackName}...`);
 
-            // 유튜브 검색 (가사 비디오가 재생 확률이 더 높음)
-            const searchQ = `${song.artistName} ${song.trackName} lyrics`;
+            // 유튜브 로딩 시도
+            tryPlayMusic(song);
+        }
+
+        function tryPlayMusic(song) {
+            const searchQ = `${song.artistName} ${song.trackName} audio`;
             
             if(player && player.loadPlaylist) {
+                // 검색 모드로 재생 시도
                 player.loadPlaylist({
                     listType: 'search',
                     list: searchQ,
@@ -345,28 +352,37 @@
                 });
                 player.setVolume(100);
 
-                // 4초 뒤에도 시작 안 되면 수동 재생 버튼 띄움
+                // 3초 뒤에도 '시작' 상태(1)가 아니면 수동 버튼 띄움
                 loadTimeout = setTimeout(() => {
-                    printManualPlayButton();
-                }, 4000);
+                    // 현재 플레이어 상태 확인
+                    if(player.getPlayerState() !== 1 && player.getPlayerState() !== 3) {
+                         printManualPlayButton();
+                    }
+                }, 3000);
             }
         }
 
-        // 수동 재생 버튼 생성 (브라우저 정책 우회용)
+        // 수동 재생 버튼 (여기가 수정됨: 단순히 playVideo가 아니라 다시 로드함)
         function printManualPlayButton() {
+            // 이미 버튼이 있으면 중복 생성 방지
+            if(document.getElementById('manual-play-btn')) return;
+
             const consoleOut = document.getElementById('console-output');
             const lineDiv = document.createElement('div');
+            lineDiv.id = 'manual-play-btn'; // ID 부여
             lineDiv.className = 'console-line';
             lineDiv.style.cursor = 'pointer';
-            lineDiv.style.color = '#4ec9b0'; // Mint color
+            lineDiv.style.color = '#4ec9b0'; 
             
             lineDiv.innerHTML = `<span class="prompt">!</span> <span style="text-decoration:underline;">[ System: 자동 재생이 차단되었습니다. 클릭하여 재생하기 ]</span>`;
             
             lineDiv.onclick = () => {
-                if(player) {
-                    player.playVideo(); 
-                    printToConsole("> Force starting playback...");
+                if(player && currentSongInfo) {
+                    printToConsole("> Retrying playback with user permission...");
                     lineDiv.style.display = 'none'; // 버튼 숨김
+                    
+                    // 핵심 수정: playVideo()가 아니라 아예 다시 로드 명령을 내림 (사용자 클릭 권한을 입힘)
+                    tryPlayMusic(currentSongInfo);
                 }
             };
             
@@ -415,9 +431,7 @@
         }
 
         function typeWriter(element, text, index) {
-            // 속도를 더 빠르게 조정 (밀림 방지)
             const speed = Math.random() * 20 + 10; 
-            
             if (index < text.length) {
                 element.textContent += text.charAt(index);
                 const consoleOut = document.getElementById('console-output');
@@ -436,7 +450,7 @@
                 playerVars: { 
                     'autoplay': 1, 
                     'controls': 0,
-                    'origin': window.location.origin // 보안 정책 대응
+                    'origin': window.location.origin 
                 },
                 events: {
                     'onStateChange': onPlayerStateChange,
@@ -446,21 +460,27 @@
         }
 
         function onPlayerError(event) {
-            // 101, 150은 임베드 금지 영상임
-            if(event.data === 101 || event.data === 150) {
-                printToConsole("ERROR: This song is blocked on YouTube.");
-                printToConsole("Try searching for another song.");
+            // 에러 발생 시 처리
+            if(event.data === 2) {
+                printToConsole("Warning: Connection Unstable (Error 2). Retrying...");
+                // 에러 2번은 파라미터 문제인데, 재시도하면 되는 경우가 있음
+            } else if (event.data === 150 || event.data === 101) {
+                printToConsole("ERROR: Music blocked by copyright owner.");
             } else {
-                printToConsole("YouTube Player Error Code: " + event.data);
+                printToConsole("YouTube Error Code: " + event.data);
             }
         }
 
         function onPlayerStateChange(event) {
             if (event.data == YT.PlayerState.PLAYING) {
                 updateStatus("Running (Playing Music)...");
-                // 로딩 타임아웃 해제
+                // 로딩 타임아웃 해제 (성공했으므로)
                 if(loadTimeout) clearTimeout(loadTimeout);
                 
+                // 수동 버튼이 떠있다면 제거
+                const btn = document.getElementById('manual-play-btn');
+                if(btn) btn.style.display = 'none';
+
                 if(syncInterval) clearInterval(syncInterval);
                 syncInterval = setInterval(checkSync, 100);
             } else if (event.data == YT.PlayerState.PAUSED) {
