@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>VS Code Lyric Console (Fixed)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Code Lyric Console (Syllable Sync)</title>
     <style>
         /* --- VS Code Dark Theme 스타일 --- */
         :root {
@@ -126,7 +127,7 @@
 
         /* 하단: 터미널 (가사 출력) */
         #terminal-lower {
-            flex: 6; /* 가사 영역을 더 넓게 */
+            flex: 6;
             background-color: var(--terminal-bg);
             display: flex;
             flex-direction: column;
@@ -153,7 +154,7 @@
             padding: 15px;
             overflow-y: auto;
             font-family: 'Consolas', monospace;
-            font-size: 18px; /* 가사 폰트 키움 */
+            font-size: 18px;
             white-space: pre-wrap;
             color: #cccccc;
         }
@@ -163,8 +164,14 @@
             line-height: 1.4;
         }
         .prompt { color: var(--keyword); margin-right: 10px; font-weight: bold; user-select: none;}
-        .lyrics-text { color: #ce9178; /* 가사는 문자열 색상(오렌지) */ transition: color 0.3s;}
-        .lyrics-text.highlight { color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+        .lyrics-text { 
+            color: #ce9178;
+            transition: color 0.3s;
+        }
+        .lyrics-text.highlight { 
+            color: #fff; 
+            text-shadow: 0 0 5px rgba(255,255,255,0.3); 
+        }
 
         /* 하단 상태바 */
         #status-bar {
@@ -237,7 +244,7 @@
         <div id="status-right">Java 17 • UTF-8 • 🚀</div>
     </div>
 
-    <div id="hidden-player"></div>
+    <div id="hidden-player" style="position: absolute; left: -9999px;"></div>
     <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
@@ -246,6 +253,7 @@
             `<span class="kw">package</span> com.vscode.music;`,
             ``,
             `<span class="kw">import</span> java.util.EmotionalEngine;`,
+            `<span class="kw">import</span> java.util.SyllableSync;`,
             ``,
             `<span class="kw">public class</span> <span class="cls">MusicPlayer</span> {`,
             `    <span class="kw">public static void</span> <span class="mth">main</span>(String[] args) {`,
@@ -253,11 +261,12 @@
             `        <span class="cls">AudioStream</span> stream = <span class="kw">new</span> <span class="cls">AudioStream</span>();`,
             `        stream.<span class="mth">connect</span>(<span class="str">"YouTube_Server"</span>);`,
             ``,
-            `        <span class="cmt">// 2. 가사 동기화 모듈 시작</span>`,
+            `        <span class="cmt">// 2. 음절 단위 가사 동기화 시작</span>`,
+            `        <span class="cls">SyllableSync</span> sync = <span class="kw">new</span> <span class="cls">SyllableSync</span>();`,
             `        <span class="kw">while</span> (stream.<span class="mth">isPlaying</span>()) {`,
-            `            <span class="cls">Lyric</span> lyric = stream.<span class="mth">getCurrentLyric</span>();`,
-            `            <span class="kw">if</span> (lyric != <span class="kw">null</span>) {`,
-            `                <span class="cls">System</span>.out.<span class="mth">println</span>(lyric);`,
+            `            <span class="cls">String</span> syllable = sync.<span class="mth">getNextSyllable</span>();`,
+            `            <span class="kw">if</span> (syllable != <span class="kw">null</span>) {`,
+            `                <span class="cls">System</span>.out.<span class="mth">print</span>(syllable);`,
             `            }`,
             `        }`,
             `    }`,
@@ -274,14 +283,15 @@
         }
         renderDummyCode();
 
-        // --- 2. 플레이어 로직 ---
+        // --- 2. 음절 분석 및 플레이어 로직 ---
         let lyricsData = [];
         let player;
         let syncInterval;
         let lastPrintedIndex = -1;
-        let currentTypeWriterTimeout = null;
+        let currentSyllableTimeouts = [];
         let loadTimeout = null; 
-        let currentSongInfo = null; 
+        let currentSongInfo = null;
+        let currentLineElement = null; 
 
         function handleEnter(e) { if(e.key === 'Enter') searchMusic(); }
 
@@ -324,7 +334,7 @@
             currentSongInfo = song; 
             lyricsData = parseLrc(song.syncedLyrics);
             lastPrintedIndex = -1; 
-            if(currentTypeWriterTimeout) clearTimeout(currentTypeWriterTimeout);
+            clearAllSyllableTimeouts();
             if(loadTimeout) clearTimeout(loadTimeout);
 
             const consoleOut = document.getElementById('console-output');
@@ -337,7 +347,6 @@
         }
 
         function tryPlayMusic(song) {
-            // [중요 수정] 가사 비디오(lyrics)로 검색 + 없으면 audio
             const searchQ = `${song.artistName} ${song.trackName} audio`;
             
             if(player && player.loadPlaylist) {
@@ -349,7 +358,6 @@
                 });
                 player.setVolume(100);
 
-                // 3초 대기 후 체크
                 loadTimeout = setTimeout(() => {
                     if(player.getPlayerState() !== 1 && player.getPlayerState() !== 3) {
                          printManualPlayButton();
@@ -388,13 +396,47 @@
             lrc.split('\n').forEach(line => {
                 const match = line.match(regex);
                 if (match) {
-                    lines.push({
-                        time: parseInt(match[1]) * 60 + parseFloat(match[2]),
-                        text: match[3].trim()
-                    });
+                    const text = match[3].trim();
+                    if (text) { // 빈 가사 제외
+                        lines.push({
+                            time: parseInt(match[1]) * 60 + parseFloat(match[2]),
+                            text: text
+                        });
+                    }
                 }
             });
             return lines;
+        }
+
+        // 음절 분리 함수 (한글 + 영어 + 공백/특수문자 처리)
+        function splitIntoSyllables(text) {
+            const syllables = [];
+            let currentSyllable = '';
+            
+            for (let char of text) {
+                // 한글 음절, 영문, 숫자는 개별 음절로
+                if (/[\u3131-\uD79D]/.test(char) || /[a-zA-Z0-9]/.test(char)) {
+                    if (currentSyllable) {
+                        syllables.push(currentSyllable);
+                        currentSyllable = '';
+                    }
+                    syllables.push(char);
+                } 
+                // 공백과 특수문자는 이전 음절에 붙임
+                else {
+                    currentSyllable += char;
+                    if (syllables.length > 0) {
+                        syllables[syllables.length - 1] += char;
+                        currentSyllable = '';
+                    }
+                }
+            }
+            
+            if (currentSyllable) {
+                syllables.push(currentSyllable);
+            }
+            
+            return syllables.filter(s => s.trim());
         }
 
         function printToConsole(text, isLyric = false) {
@@ -408,6 +450,7 @@
             
             const textSpan = document.createElement('span');
             textSpan.className = isLyric ? 'lyrics-text' : '';
+            textSpan.textContent = isLyric ? '' : text;
             
             lineDiv.appendChild(promptSpan);
             lineDiv.appendChild(textSpan);
@@ -416,34 +459,23 @@
             consoleOut.scrollTop = consoleOut.scrollHeight;
 
             if (isLyric) {
-                typeWriter(textSpan, text, 0);
-            } else {
-                textSpan.textContent = text;
+                currentLineElement = textSpan;
             }
         }
 
-        function typeWriter(element, text, index) {
-            const speed = Math.random() * 20 + 10; 
-            if (index < text.length) {
-                element.textContent += text.charAt(index);
-                const consoleOut = document.getElementById('console-output');
-                consoleOut.scrollTop = consoleOut.scrollHeight;
-
-                currentTypeWriterTimeout = setTimeout(() => {
-                    typeWriter(element, text, index + 1);
-                }, speed);
-            }
+        function clearAllSyllableTimeouts() {
+            currentSyllableTimeouts.forEach(timeout => clearTimeout(timeout));
+            currentSyllableTimeouts = [];
         }
 
-        // --- 4. 유튜브 API (여기가 핵심 수정됨) ---
+        // --- 4. 유튜브 API ---
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('hidden-player', {
                 height: '200', 
                 width: '200',
-                // videoId를 비워두면 에러가 나므로, 구글 개발자 공식 비디오 ID를 넣어 둠 (초기화용)
                 videoId: 'M7lc1UVf-VE', 
                 playerVars: { 
-                    'autoplay': 0, // [중요] 처음엔 자동재생 끄기
+                    'autoplay': 0,
                     'controls': 1,
                     'origin': window.location.origin 
                 },
@@ -455,11 +487,9 @@
         }
 
         function onPlayerError(event) {
-            // 노래가 선택되지 않았을 때의 에러는 무시
             if (!currentSongInfo) return;
 
             if(event.data === 2) {
-                // 정말 노래를 틀다가 난 에러라면 재시도
                 printToConsole("Warning: Connection Unstable (Error 2). Retrying...");
                 setTimeout(() => tryPlayMusic(currentSongInfo), 2000);
             } else if (event.data === 150 || event.data === 101) {
@@ -478,10 +508,15 @@
                 if(btn) btn.style.display = 'none';
 
                 if(syncInterval) clearInterval(syncInterval);
-                syncInterval = setInterval(checkSync, 100);
+                syncInterval = setInterval(checkSync, 50); // 더 세밀한 체크
             } else if (event.data == YT.PlayerState.PAUSED) {
                 updateStatus("Paused");
                 clearInterval(syncInterval);
+                clearAllSyllableTimeouts();
+            } else if (event.data == YT.PlayerState.ENDED) {
+                updateStatus("Song Ended");
+                clearInterval(syncInterval);
+                clearAllSyllableTimeouts();
             }
         }
 
@@ -490,6 +525,7 @@
             
             const currentTime = player.getCurrentTime();
             let activeIndex = -1;
+            
             for(let i = 0; i < lyricsData.length; i++) {
                 if (currentTime >= lyricsData[i].time) {
                     activeIndex = i;
@@ -499,10 +535,43 @@
             }
 
             if(activeIndex !== -1 && activeIndex !== lastPrintedIndex) {
-                if(currentTypeWriterTimeout) clearTimeout(currentTypeWriterTimeout);
-                printToConsole(lyricsData[activeIndex].text, true);
+                clearAllSyllableTimeouts();
+                displayLyricWithSyllables(activeIndex);
                 lastPrintedIndex = activeIndex;
             }
+        }
+
+        function displayLyricWithSyllables(index) {
+            const lyric = lyricsData[index];
+            const syllables = splitIntoSyllables(lyric.text);
+            
+            // 다음 가사까지의 시간 계산
+            let timeToNext;
+            if (index + 1 < lyricsData.length) {
+                timeToNext = lyricsData[index + 1].time - lyric.time;
+            } else {
+                timeToNext = syllables.length * 0.3; // 마지막 가사는 0.3초씩
+            }
+            
+            // 음절당 시간 배분 (최소 50ms, 최대 500ms)
+            let timePerSyllable = timeToNext / syllables.length;
+            timePerSyllable = Math.max(0.05, Math.min(0.5, timePerSyllable));
+            
+            // 새 라인 생성
+            printToConsole('', true);
+            
+            // 음절 하나씩 표시
+            syllables.forEach((syllable, i) => {
+                const timeout = setTimeout(() => {
+                    if (currentLineElement) {
+                        currentLineElement.textContent += syllable;
+                        const consoleOut = document.getElementById('console-output');
+                        consoleOut.scrollTop = consoleOut.scrollHeight;
+                    }
+                }, i * timePerSyllable * 1000);
+                
+                currentSyllableTimeouts.push(timeout);
+            });
         }
 
         function updateStatus(msg) {
