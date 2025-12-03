@@ -3,52 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VS Code Lyric Console (Final)</title>
+    <title>Lyric Console: Enter</title>
     <style>
-        /* --- VS Code 테마 스타일 --- */
+        /* --- 공통 스타일 --- */
         :root {
             --bg-color: #1e1e1e;
-            --sidebar-color: #252526;
-            --terminal-bg: #1e1e1e;
             --text-color: #d4d4d4;
-            --keyword: #569cd6; 
-            --string: #ce9178;  
-            --comment: #6a9955; 
-            --statusbar: #007acc;
+            --accent-color: #007acc;
+            --btn-hover: #005f9e;
         }
-
         body {
             margin: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Consolas', 'Courier New', monospace;
-            display: flex;
-            flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
 
-        #workspace { display: flex; flex: 1; overflow: hidden; }
+        /* --- 1. 랜딩 페이지 (시작 화면) 스타일 --- */
+        #landing-page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background: radial-gradient(circle at center, #2d2d2d 0%, #1e1e1e 100%);
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+        }
+        .hero-title {
+            font-size: 3rem; font-weight: bold; margin-bottom: 1rem;
+            text-shadow: 0 0 20px rgba(0, 122, 204, 0.5);
+        }
+        .hero-subtitle {
+            font-size: 1.2rem; color: #888; margin-bottom: 3rem;
+            text-align: center; line-height: 1.5;
+        }
+        .btn-group { display: flex; gap: 20px; }
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.1rem; font-family: inherit; font-weight: bold;
+            color: white; background-color: var(--accent-color);
+            border: none; border-radius: 5px; cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .btn:hover { background-color: var(--btn-hover); transform: translateY(-2px); }
+        .btn-outline {
+            background-color: transparent; border: 2px solid var(--accent-color);
+        }
+        .btn-outline:hover { background-color: rgba(0, 122, 204, 0.1); }
 
-        /* 사이드바 */
-        #sidebar {
-            width: 300px;
-            background-color: var(--sidebar-color);
-            border-right: 1px solid #333;
-            display: flex;
+
+        /* --- 2. VS Code 플레이어 스타일 (숨김 처리됨) --- */
+        #player-page {
+            display: none; /* 처음에 숨김 */
+            height: 100%; width: 100%;
             flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* (기존 플레이어 CSS 그대로 유지) */
+        #workspace { display: flex; flex: 1; overflow: hidden; }
+        #sidebar {
+            width: 300px; background-color: #252526; border-right: 1px solid #333;
+            display: flex; flex-direction: column;
         }
         .sidebar-header {
             padding: 10px; font-size: 11px; font-weight: bold; color: #bbb;
-            text-transform: uppercase;
+            display: flex; justify-content: space-between;
         }
         .search-box { padding: 10px; border-bottom: 1px solid #333; }
         input {
             width: 90%; background-color: #3c3c3c; border: 1px solid #3c3c3c;
             color: white; padding: 6px 8px; outline: none; font-family: inherit;
         }
-        input:focus { border-color: var(--keyword); }
-        
+        input:focus { border-color: #007acc; }
         #result-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
         .song-item {
             padding: 8px 15px; cursor: pointer; font-size: 13px;
@@ -56,108 +86,129 @@
             border-left: 3px solid transparent;
         }
         .song-item:hover { background-color: #2a2d2e; }
-        .song-item.active { background-color: #37373d; border-left-color: var(--keyword); }
-
-        /* 메인 영역 */
+        .song-item.active { background-color: #37373d; border-left-color: #007acc; }
         #main-container { flex: 1; display: flex; flex-direction: column; }
-        #editor-upper {
-            flex: 4; display: flex; flex-direction: column; border-bottom: 1px solid #333;
-        }
+        #editor-upper { flex: 4; display: flex; flex-direction: column; border-bottom: 1px solid #333; }
         .tab-bar { background-color: #2d2d2d; height: 35px; display: flex; }
         .tab {
-            background-color: var(--bg-color); padding: 0 15px; display: flex;
-            align-items: center; font-size: 13px; border-top: 2px solid var(--keyword);
-            color: white;
+            background-color: #1e1e1e; padding: 0 15px; display: flex;
+            align-items: center; font-size: 13px; border-top: 2px solid #007acc; color: white;
         }
-        #fake-code-area {
-            flex: 1; padding: 10px 20px; overflow-y: auto;
-            font-size: 14px; line-height: 1.5;
-        }
+        #fake-code-area { flex: 1; padding: 10px 20px; overflow-y: auto; font-size: 14px; line-height: 1.5; }
         .line-num { color: #858585; margin-right: 20px; user-select: none; text-align: right; display: inline-block; width: 30px;}
-        .kw { color: var(--keyword); } .str { color: var(--string); }
-        .cmt { color: var(--comment); } .cls { color: #4ec9b0; } .mth { color: #dcdcaa; }
-
-        /* 터미널 영역 */
-        #terminal-lower {
-            flex: 6; background-color: var(--terminal-bg);
-            display: flex; flex-direction: column; border-top: 1px solid #333;
-        }
+        .kw { color: #569cd6; } .str { color: #ce9178; }
+        .cmt { color: #6a9955; } .cls { color: #4ec9b0; } .mth { color: #dcdcaa; }
+        #terminal-lower { flex: 6; background-color: #1e1e1e; display: flex; flex-direction: column; border-top: 1px solid #333; }
         .terminal-tabs {
             display: flex; background-color: #252526; height: 30px;
             align-items: center; padding-left: 10px; border-bottom: 1px solid #333;
         }
-        .terminal-tab {
-            font-size: 11px; color: #888; margin-right: 20px; cursor: pointer;
-        }
+        .terminal-tab { font-size: 11px; color: #888; margin-right: 20px; cursor: pointer; }
         .terminal-tab.active { color: white; border-bottom: 1px solid white; }
-
         #console-output {
             flex: 1; padding: 15px; overflow-y: auto;
             font-family: 'Consolas', monospace; font-size: 18px;
             white-space: pre-wrap; color: #cccccc;
         }
         .console-line { margin-bottom: 6px; display: flex; line-height: 1.4; }
-        .prompt { color: var(--keyword); margin-right: 10px; font-weight: bold; }
-        .lyrics-text { color: #ce9178; transition: color 0.3s; }
-
+        .prompt { color: #569cd6; margin-right: 10px; font-weight: bold; }
+        .lyrics-text { color: #ce9178; transition: color 0.1s; }
         #status-bar {
-            height: 22px; background-color: var(--statusbar); color: white;
+            height: 22px; background-color: #007acc; color: white;
             font-size: 12px; display: flex; align-items: center;
             padding: 0 10px; justify-content: space-between;
         }
-
-        /* 플레이어 숨김 처리 (투명하게 만들어서 안 보이게 함) */
-        #hidden-player-wrapper {
-            position: absolute; top: 0; left: 0; 
-            width: 1px; height: 1px; opacity: 0; overflow: hidden;
-            pointer-events: none;
+        /* 유튜브 플레이어 (우측 하단 작게 고정) */
+        #player-container {
+            position: fixed; bottom: 30px; right: 20px;
+            width: 320px; height: 180px; z-index: 1000;
+            border: 2px solid #007acc; background: #000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            display: none; /* 랜딩 페이지에선 안 보임 */
         }
     </style>
 </head>
 <body>
 
-    <div id="workspace">
-        <div id="sidebar">
-            <div class="sidebar-header"><span>EXPLORER</span><span>...</span></div>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search song..." onkeypress="handleEnter(event)">
-            </div>
-            <ul id="result-list">
-                <li class="song-item" style="color: gray;">검색어를 입력하고 Enter를 누르세요.</li>
-            </ul>
+    <div id="landing-page">
+        <div class="hero-title">Lyric Console</div>
+        <div class="hero-subtitle">
+            음악을 코딩하듯 감상하세요.<br>
+            VS Code 테마의 감성적인 가사 플레이어
         </div>
-
-        <div id="main-container">
-            <div id="editor-upper">
-                <div class="tab-bar"><div class="tab"><span>🎵 MusicPlayer.java</span></div></div>
-                <div id="fake-code-area"></div>
-            </div>
-
-            <div id="terminal-lower">
-                <div class="terminal-tabs">
-                    <div class="terminal-tab">PROBLEMS</div>
-                    <div class="terminal-tab">OUTPUT</div>
-                    <div class="terminal-tab active">DEBUG CONSOLE</div>
-                </div>
-                <div id="console-output">
-                    <div class="console-line"><span class="prompt">player $</span><span>Ready.</span></div>
-                </div>
-            </div>
+        <div class="btn-group">
+            <button class="btn" onclick="enterPlayer()">체험하기</button>
+            <button class="btn btn-outline" onclick="shareLink()">공유하기</button>
         </div>
     </div>
 
-    <div id="status-bar">
-        <div id="status-left">Ready</div>
-        <div id="status-right">Java 17 • UTF-8 • <span id="player-status">Initializing...</span></div>
+    <div id="player-page">
+        <div id="workspace">
+            <div id="sidebar">
+                <div class="sidebar-header"><span>EXPLORER</span><span>...</span></div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Song Title (Enter)" onkeypress="handleEnter(event)">
+                </div>
+                <ul id="result-list">
+                    <li class="song-item" style="color: gray;">검색어를 입력하세요.</li>
+                </ul>
+            </div>
+            <div id="main-container">
+                <div id="editor-upper">
+                    <div class="tab-bar"><div class="tab"><span>🎵 MusicPlayer.java</span></div></div>
+                    <div id="fake-code-area"></div>
+                </div>
+                <div id="terminal-lower">
+                    <div class="terminal-tabs">
+                        <div class="terminal-tab">PROBLEMS</div>
+                        <div class="terminal-tab">OUTPUT</div>
+                        <div class="terminal-tab active">DEBUG CONSOLE</div>
+                    </div>
+                    <div id="console-output">
+                        <div class="console-line"><span class="prompt">player $</span><span>System initialized.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="status-bar">
+            <div id="status-left">Ready</div>
+            <div id="status-right">Java 17 • UTF-8 • <span id="player-status">Waiting...</span></div>
+        </div>
     </div>
 
-    <div id="hidden-player-wrapper">
+    <div id="player-container">
         <div id="hidden-player"></div>
     </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // --- 1. 가짜 코드 렌더링 ---
+        // --- [0] 화면 전환 및 공유 기능 ---
+        function enterPlayer() {
+            const landing = document.getElementById('landing-page');
+            const playerPage = document.getElementById('player-page');
+            const playerContainer = document.getElementById('player-container');
+
+            // 페이드 아웃/인 효과
+            landing.style.opacity = '0';
+            setTimeout(() => {
+                landing.style.display = 'none';
+                playerPage.style.display = 'flex';
+                playerContainer.style.display = 'block';
+                // 약간의 딜레이 후 페이드 인
+                setTimeout(() => { playerPage.style.opacity = '1'; }, 50);
+            }, 500);
+        }
+
+        function shareLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('링크가 복사되었습니다! 친구들에게 공유해보세요.');
+            }).catch(() => {
+                alert('복사에 실패했습니다. URL을 직접 복사해주세요.');
+            });
+        }
+
+        // --- [1] 플레이어 로직 (이전 버전 완벽 이식) ---
         const dummyCode = [
             `<span class="kw">package</span> com.vscode.music;`,
             ``,
@@ -166,16 +217,15 @@
             `        <span class="cls">AudioStream</span> stream = <span class="kw">new</span> <span class="cls">AudioStream</span>();`,
             `        stream.<span class="mth">connect</span>(<span class="str">"YouTube_Server"</span>);`,
             `        <span class="kw">while</span> (stream.<span class="mth">isPlaying</span>()) {`,
-            `            <span class="cls">System</span>.out.<span class="mth">print</span>(stream.<span class="mth">getLyrics</span>());`,
+            `            <span class="cls">System</span>.out.<span class="mth">print</span>(stream.<span class="mth">getLyric</span>());`,
             `        }`,
             `    }`,
             `}`
         ];
         document.getElementById('fake-code-area').innerHTML = dummyCode.map((l,i)=>`<div><span class="line-num">${i+1}</span>${l}</div>`).join('');
 
-        // --- 2. 플레이어 및 데이터 로직 ---
         let lyricsData = [], player, syncInterval, currentSongInfo, isRetrying = false;
-        let lastPrintedIndex = -1, timeouts = [], loadTimeout;
+        let lastPrintedIndex = -1, timeouts = [], loadTimeout, playerReady = false;
 
         function handleEnter(e) { if(e.key === 'Enter') searchMusic(); }
 
@@ -184,15 +234,12 @@
             if(!query) return;
             const list = document.getElementById('result-list');
             list.innerHTML = '<li class="song-item">Searching...</li>';
-
             try {
                 const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
                 const data = await res.json();
                 const songs = data.filter(s => s.syncedLyrics);
                 list.innerHTML = '';
-                
-                if(!songs.length) { list.innerHTML = '<li class="song-item">No lyrics found.</li>'; return; }
-
+                if(!songs.length) { list.innerHTML = '<li class="song-item">No synced lyrics found.</li>'; return; }
                 songs.forEach(song => {
                     const li = document.createElement('li');
                     li.className = 'song-item';
@@ -211,38 +258,33 @@
             currentSongInfo = song;
             lyricsData = parseLrc(song.syncedLyrics);
             lastPrintedIndex = -1;
-            isRetrying = false; // 재시도 플래그 초기화
+            isRetrying = false;
             clearTimeouts();
-
             document.getElementById('console-output').innerHTML = '';
-            printLog(`Loading: ${song.trackName}...`);
+            printLog(`Selected: ${song.trackName} - ${song.artistName}`);
             document.getElementById('status-left').innerText = `Loading ${song.trackName}...`;
-
-            // 1차 시도: 일반 Audio 모드
             tryPlay(song, false);
         }
 
         function tryPlay(song, useLyricsMode) {
-            if(!player || !player.loadPlaylist) {
+            if(!playerReady) {
                 printLog("Waiting for Player...");
                 setTimeout(() => tryPlay(song, useLyricsMode), 1000);
                 return;
             }
-
-            // 검색어 설정: 재시도 중이면 'lyrics', 아니면 'audio'
             const mode = useLyricsMode ? 'lyrics' : 'audio';
             const q = `${song.artistName} ${song.trackName} ${mode}`;
             printLog(`Searching YouTube (${mode}): ${q}`);
 
-            player.loadPlaylist({ listType: 'search', list: q, index:0, startSeconds:0 });
-            player.setVolume(100);
+            if(player && player.loadPlaylist) {
+                player.loadPlaylist({ listType: 'search', list: q, index: 0, startSeconds: 0 });
+                player.setVolume(100);
+            }
 
             if(loadTimeout) clearTimeout(loadTimeout);
             loadTimeout = setTimeout(() => {
-                // 4초 뒤에도 시작 안하면 수동 버튼
-                if(player.getPlayerState() !== 1 && player.getPlayerState() !== 3) {
-                    showManualBtn();
-                }
+                const state = player.getPlayerState();
+                if(state !== 1 && state !== 3) showManualBtn();
             }, 4000);
         }
 
@@ -252,16 +294,15 @@
             div.id = 'manual-btn';
             div.className = 'console-line';
             div.style.color = '#4ec9b0'; div.style.cursor = 'pointer';
-            div.innerHTML = `<span class="prompt">!</span> <span style="text-decoration:underline">[ Click to Play (재생 시작하기) ]</span>`;
+            div.innerHTML = `<span class="prompt">!</span> <span style="text-decoration:underline">[ System: 자동 재생 차단됨. 클릭하여 재생 ]</span>`;
             div.onclick = () => {
                 div.style.display = 'none';
-                printLog("Retrying playback...");
+                printLog("Retrying playback (User Action)...");
                 tryPlay(currentSongInfo, isRetrying);
             };
             document.getElementById('console-output').appendChild(div);
         }
 
-        // --- 3. 유틸리티 ---
         function parseLrc(lrc) {
             const lines = [];
             lrc.split('\n').forEach(line => {
@@ -283,23 +324,19 @@
         function printLyric(text) {
             const div = document.createElement('div');
             div.className = 'console-line';
-            div.innerHTML = `<span class="prompt">></span><span class="lyrics-text"></span>`; // 내용 비워둠
+            div.innerHTML = `<span class="prompt">></span><span class="lyrics-text"></span>`; 
             const consoleOut = document.getElementById('console-output');
             consoleOut.appendChild(div);
             consoleOut.scrollTop = consoleOut.scrollHeight;
-            
-            // 음절 싱크 효과
             const target = div.querySelector('.lyrics-text');
             const syllables = splitSyllables(text);
-            const duration = 2000; // 대략적인 애니메이션 시간
+            const duration = 2000; 
             const step = Math.min(100, duration / syllables.length);
-            
             syllables.forEach((s, i) => {
                 const t = setTimeout(() => target.textContent += s, i * step);
                 timeouts.push(t);
             });
         }
-
         function splitSyllables(text) {
             const res = []; let cur = '';
             for(let c of text) {
@@ -310,17 +347,15 @@
             if(cur) res.push(cur);
             return res;
         }
-
         function clearTimeouts() { timeouts.forEach(t=>clearTimeout(t)); timeouts = []; }
 
-        // --- 4. 유튜브 API ---
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('hidden-player', {
-                height: '100', width: '100',
-                videoId: 'M7lc1UVf-VE', // 초기화용 (화면엔 안보임)
+                height: '100%', width: '100%',
+                videoId: 'M7lc1UVf-VE',
                 playerVars: { 'autoplay': 0, 'controls': 1, 'origin': window.location.origin },
                 events: {
-                    'onReady': () => document.getElementById('player-status').innerText = 'Player Ready',
+                    'onReady': () => { playerReady = true; document.getElementById('player-status').innerText = 'Player Ready'; },
                     'onStateChange': onStateChange,
                     'onError': onError
                 }
@@ -329,17 +364,13 @@
 
         function onError(e) {
             if(!currentSongInfo) return;
-            // 150/101 에러(저작권) 발생 시 -> Lyrics 모드로 재시도
             if(e.data === 150 || e.data === 101) {
                 if(!isRetrying) {
                     printLog("! Audio blocked. Switching to Lyrics mode...");
                     isRetrying = true;
                     tryPlay(currentSongInfo, true);
-                } else {
-                    printLog("Error: Playback failed.");
-                }
+                } else { printLog("Error: Content blocked."); }
             } else if (e.data === 2) {
-                // 파라미터 에러 재시도
                 setTimeout(() => tryPlay(currentSongInfo, isRetrying), 2000);
             }
         }
@@ -350,7 +381,6 @@
                 if(loadTimeout) clearTimeout(loadTimeout);
                 const btn = document.getElementById('manual-btn');
                 if(btn) btn.style.display = 'none';
-
                 if(syncInterval) clearInterval(syncInterval);
                 syncInterval = setInterval(checkSync, 100);
             }
