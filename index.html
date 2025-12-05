@@ -212,229 +212,261 @@
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // --- [A] 화면 전환 로직 ---
-        function startExperience() {
-            const landing = document.getElementById('landing-page');
-            const playerPage = document.getElementById('player-page');
-            const playerContainer = document.getElementById('player-container');
+    // --- [A] 화면 전환 로직 ---
+    function startExperience() {
+        const landing = document.getElementById('landing-page');
+        const playerPage = document.getElementById('player-page');
+        const playerContainer = document.getElementById('player-container');
 
-            // 애니메이션 효과
-            landing.style.opacity = '0';
-            landing.style.transform = 'scale(0.95)';
+        // 애니메이션 효과
+        landing.style.opacity = '0';
+        landing.style.transform = 'scale(0.95)';
+        
+        setTimeout(() => {
+            landing.style.display = 'none';
+            playerPage.style.display = 'flex';
+            playerContainer.style.display = 'block'; // 플레이어 컨테이너 보이기
             
-            setTimeout(() => {
-                landing.style.display = 'none';
-                playerPage.style.display = 'flex';
-                playerContainer.style.display = 'block'; // 플레이어 보이기
-                
-                // 플레이어 등장 애니메이션
-                setTimeout(() => { playerPage.style.opacity = '1'; }, 50);
-            }, 500);
-        }
+            // 플레이어 등장 애니메이션
+            setTimeout(() => { playerPage.style.opacity = '1'; }, 50);
 
-        function shareLink() {
-            const url = window.location.href;
-            navigator.clipboard.writeText(url).then(() => {
-                alert("링크가 복사되었습니다!");
-            }).catch(() => alert("복사 실패"));
-        }
-
-        // --- [B] 플레이어 기능 (기존 로직 유지) ---
-        const dummyCode = [
-            `<span class="kw">package</span> com.vscode.music;`,
-            ``,
-            `<span class="kw">import</span> java.util.EmotionalEngine;`,
-            `<span class="kw">import</span> java.util.SyllableSync;`,
-            ``,
-            `<span class="kw">public class</span> <span class="cls">MusicPlayer</span> {`,
-            `    <span class="kw">public static void</span> <span class="mth">main</span>(String[] args) {`,
-            `        <span class="cmt">// 1. 플레이어 엔진 초기화</span>`,
-            `        <span class="cls">AudioStream</span> stream = <span class="kw">new</span> <span class="cls">AudioStream</span>();`,
-            `        stream.<span class="mth">connect</span>(<span class="str">"YouTube_Server"</span>);`,
-            `        <span class="cmt">// 2. 가사 출력 및 싱크</span>`,
-            `        <span class="kw">while</span> (stream.<span class="mth">isPlaying</span>()) {`,
-            `            <span class="cls">System</span>.out.<span class="mth">print</span>(stream.<span class="mth">getLyric</span>());`,
-            `        }`,
-            `    }`,
-            `}`
-        ];
-        document.getElementById('fake-code-area').innerHTML = dummyCode.map((l,i)=>`<div><span class="line-num">${i+1}</span>${l}</div>`).join('');
-
-        let lyricsData = [], player, syncInterval, currentSongInfo, isRetrying = false;
-        let lastPrintedIndex = -1, timeouts = [], loadTimeout, playerReady = false;
-
-        function handleEnter(e) { if(e.key === 'Enter') searchMusic(); }
-
-        async function searchMusic() {
-            const query = document.getElementById('searchInput').value;
-            if(!query) return;
-            const list = document.getElementById('result-list');
-            list.innerHTML = '<li class="song-item">Searching...</li>';
-            try {
-                const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
-                const data = await res.json();
-                const songs = data.filter(s => s.syncedLyrics);
-                list.innerHTML = '';
-                if(!songs.length) { list.innerHTML = '<li class="song-item">No synced lyrics found.</li>'; return; }
-                songs.forEach(song => {
-                    const li = document.createElement('li');
-                    li.className = 'song-item';
-                    li.innerHTML = `🎵 ${song.artistName} - ${song.trackName}`;
-                    li.onclick = () => {
-                        document.querySelectorAll('.song-item').forEach(e => e.classList.remove('active'));
-                        li.classList.add('active');
-                        loadSong(song);
-                    };
-                    list.appendChild(li);
-                });
-            } catch(e) { list.innerHTML = '<li class="song-item">Error fetching data.</li>'; }
-        }
-
-        function loadSong(song) {
-            currentSongInfo = song;
-            lyricsData = parseLrc(song.syncedLyrics);
-            lastPrintedIndex = -1;
-            isRetrying = false;
-            clearTimeouts();
-            document.getElementById('console-output').innerHTML = '';
-            printLog(`Selected: ${song.trackName} - ${song.artistName}`);
-            document.getElementById('status-left').innerText = `Loading ${song.trackName}...`;
-            tryPlay(song, false);
-        }
-
-        function tryPlay(song, useLyricsMode) {
-            if(!playerReady) {
-                printLog("Waiting for Player API...");
-                setTimeout(() => tryPlay(song, useLyricsMode), 1000);
-                return;
+            // [수정됨] 화면 전환 후 플레이어가 준비되지 않았을 수 있으므로 리사이즈 트리거
+            if(player && player.getIframe()) {
+                player.getIframe().dispatchEvent(new Event('resize'));
             }
-            const mode = useLyricsMode ? 'lyrics' : 'audio';
-            const q = `${song.artistName} ${song.trackName} ${mode}`;
-            printLog(`Searching YouTube (${mode}): ${q}`);
+        }, 500);
+    }
 
-            if(player && player.loadPlaylist) {
-                player.loadPlaylist({ listType: 'search', list: q, index: 0, startSeconds: 0 });
-                player.setVolume(100);
+    function shareLink() {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            alert("링크가 복사되었습니다!");
+        }).catch(() => alert("복사 실패"));
+    }
+
+    // --- [B] 플레이어 기능 ---
+    const dummyCode = [
+        `<span class="kw">package</span> com.vscode.music;`,
+        ``,
+        `<span class="kw">import</span> java.util.EmotionalEngine;`,
+        `<span class="kw">import</span> java.util.SyllableSync;`,
+        ``,
+        `<span class="kw">public class</span> <span class="cls">MusicPlayer</span> {`,
+        `    <span class="kw">public static void</span> <span class="mth">main</span>(String[] args) {`,
+        `        <span class="cmt">// 1. 플레이어 엔진 초기화</span>`,
+        `        <span class="cls">AudioStream</span> stream = <span class="kw">new</span> <span class="cls">AudioStream</span>();`,
+        `        <span class="cmt">// 2. 가사 출력 및 싱크</span>`,
+        `        <span class="kw">while</span> (stream.<span class="mth">isPlaying</span>()) {`,
+        `            <span class="cls">System</span>.out.<span class="mth">print</span>(stream.<span class="mth">getLyric</span>());`,
+        `        }`,
+        `    }`,
+        `}`
+    ];
+    document.getElementById('fake-code-area').innerHTML = dummyCode.map((l,i)=>`<div><span class="line-num">${i+1}</span>${l}</div>`).join('');
+
+    let lyricsData = [], player, syncInterval, currentSongInfo, isRetrying = false;
+    let lastPrintedIndex = -1, timeouts = [], loadTimeout, playerReady = false;
+
+    function handleEnter(e) { if(e.key === 'Enter') searchMusic(); }
+
+    async function searchMusic() {
+        const query = document.getElementById('searchInput').value;
+        if(!query) return;
+        const list = document.getElementById('result-list');
+        list.innerHTML = '<li class="song-item">Searching...</li>';
+        try {
+            const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            const songs = data.filter(s => s.syncedLyrics);
+            list.innerHTML = '';
+            if(!songs.length) { list.innerHTML = '<li class="song-item">No synced lyrics found.</li>'; return; }
+            songs.forEach(song => {
+                const li = document.createElement('li');
+                li.className = 'song-item';
+                li.innerHTML = `🎵 ${song.artistName} - ${song.trackName}`;
+                li.onclick = () => {
+                    document.querySelectorAll('.song-item').forEach(e => e.classList.remove('active'));
+                    li.classList.add('active');
+                    loadSong(song);
+                };
+                list.appendChild(li);
+            });
+        } catch(e) { list.innerHTML = '<li class="song-item">Error fetching data.</li>'; }
+    }
+
+    function loadSong(song) {
+        currentSongInfo = song;
+        lyricsData = parseLrc(song.syncedLyrics);
+        lastPrintedIndex = -1;
+        isRetrying = false;
+        clearTimeouts();
+        document.getElementById('console-output').innerHTML = '';
+        printLog(`Selected: ${song.trackName} - ${song.artistName}`);
+        document.getElementById('status-left').innerText = `Loading ${song.trackName}...`;
+        tryPlay(song, false);
+    }
+
+    function tryPlay(song, useLyricsMode) {
+        if(!playerReady) {
+            printLog("Waiting for Player API...");
+            setTimeout(() => tryPlay(song, useLyricsMode), 1000);
+            return;
+        }
+        
+        // [수정됨] 검색어 최적화 (가수 + 제목)
+        const q = `${song.artistName} ${song.trackName}`;
+        printLog(`Searching YouTube: ${q}`);
+
+        if(player && player.loadPlaylist) {
+            // [수정됨] listType 'search' 사용 및 명시적 재생 요청
+            player.loadPlaylist({
+                listType: 'search',
+                list: q,
+                index: 0,
+                startSeconds: 0
+            });
+            player.setVolume(100);
+            // [중요] 일부 브라우저에서 loadPlaylist 후 자동 재생이 안 될 수 있어 약간의 딜레이 후 재생 시도
+            setTimeout(() => { 
+                try { player.playVideo(); } catch(e){} 
+            }, 1000);
+        }
+
+        if(loadTimeout) clearTimeout(loadTimeout);
+        loadTimeout = setTimeout(() => {
+            const state = player.getPlayerState();
+            // -1(시작안됨), 5(동영상 신호 없음) 등의 상태일 때 수동 버튼 표시
+            if(state === -1 || state === 5) showManualBtn();
+        }, 5000);
+    }
+
+    function showManualBtn() {
+        if(document.getElementById('manual-btn')) return;
+        const div = document.createElement('div');
+        div.id = 'manual-btn';
+        div.className = 'console-line';
+        div.style.color = '#4ec9b0'; div.style.cursor = 'pointer';
+        div.innerHTML = `<span class="prompt">!</span> <span style="text-decoration:underline">[ System: 재생이 차단되었습니다. 클릭하여 재생 ]</span>`;
+        div.onclick = () => {
+            div.style.display = 'none';
+            printLog("Retrying playback (User Action)...");
+            player.playVideo(); // 단순히 playVideo만 다시 호출
+        };
+        document.getElementById('console-output').appendChild(div);
+    }
+
+    function parseLrc(lrc) {
+        const lines = [];
+        lrc.split('\n').forEach(line => {
+            const m = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
+            if(m && m[3].trim()) lines.push({ time: parseInt(m[1])*60 + parseFloat(m[2]), text: m[3].trim() });
+        });
+        return lines;
+    }
+
+    function printLog(msg) {
+        const div = document.createElement('div');
+        div.className = 'console-line';
+        div.innerHTML = `<span class="prompt">player $</span><span>${msg}</span>`;
+        const consoleOut = document.getElementById('console-output');
+        consoleOut.appendChild(div);
+        consoleOut.scrollTop = consoleOut.scrollHeight;
+    }
+
+    function printLyric(text) {
+        const div = document.createElement('div');
+        div.className = 'console-line';
+        div.innerHTML = `<span class="prompt">></span><span class="lyrics-text"></span>`; 
+        const consoleOut = document.getElementById('console-output');
+        consoleOut.appendChild(div);
+        consoleOut.scrollTop = consoleOut.scrollHeight;
+        const target = div.querySelector('.lyrics-text');
+        const syllables = splitSyllables(text);
+        const duration = 2000; 
+        const step = Math.min(100, duration / syllables.length);
+        syllables.forEach((s, i) => {
+            const t = setTimeout(() => target.textContent += s, i * step);
+            timeouts.push(t);
+        });
+    }
+    function splitSyllables(text) {
+        const res = []; let cur = '';
+        for(let c of text) {
+            if(/[\u3131-\uD79D]/.test(c) || /[a-zA-Z0-9]/.test(c)) {
+                if(cur) { res.push(cur); cur=''; } res.push(c);
+            } else { cur += c; if(res.length) res[res.length-1]+=c; cur=''; }
+        }
+        if(cur) res.push(cur);
+        return res;
+    }
+    function clearTimeouts() { timeouts.forEach(t=>clearTimeout(t)); timeouts = []; }
+
+    // --- [중요] 유튜브 API 설정 수정됨 ---
+    function onYouTubeIframeAPIReady() {
+        // [수정됨] 로컬 파일 실행 시 origin이 'file://' 또는 null이 되어 API가 차단됨.
+        // 이를 방지하기 위해 로컬일 경우 origin을 더미 도메인으로 설정하거나 제거해야 함.
+        let originVal = window.location.origin;
+        if (!originVal || originVal === 'null' || originVal.startsWith('file://')) {
+            originVal = 'https://www.youtube.com'; // 로컬 테스트용 더미 오리진
+        }
+
+        player = new YT.Player('hidden-player', {
+            height: '100%', width: '100%',
+            videoId: 'M7lc1UVf-VE', // 초기 영상
+            playerVars: { 
+                'autoplay': 0, 
+                'controls': 1,
+                'origin': originVal, // [수정] 오리진 강제 설정
+                'rel': 0 // 추천 영상 표시 끄기
+            },
+            events: {
+                'onReady': () => { 
+                    playerReady = true; 
+                    document.getElementById('player-status').innerText = 'Player Ready'; 
+                },
+                'onStateChange': onStateChange,
+                'onError': onError
             }
+        });
+    }
 
+    function onError(e) {
+        // 150, 101: 임베드 차단된 영상. 
+        // 100: 영상 없음
+        printLog(`Error Code: ${e.data}. Trying fallback...`);
+        if(currentSongInfo && !isRetrying) {
+            isRetrying = true;
+            // 에러 발생 시 그냥 playVideo를 다시 시도하거나 다음 곡 로직 필요
+            // 여기서는 사용자에게 알림
+            printLog("⚠️ Video restricted or unavailable.");
+        }
+    }
+
+    function onStateChange(e) {
+        if(e.data === YT.PlayerState.PLAYING) {
+            document.getElementById('status-left').innerText = "Playing: " + (currentSongInfo ? currentSongInfo.trackName : "Unknown");
             if(loadTimeout) clearTimeout(loadTimeout);
-            loadTimeout = setTimeout(() => {
-                const state = player.getPlayerState();
-                if(state !== 1 && state !== 3) showManualBtn();
-            }, 4000);
+            const btn = document.getElementById('manual-btn');
+            if(btn) btn.style.display = 'none';
+            if(syncInterval) clearInterval(syncInterval);
+            syncInterval = setInterval(checkSync, 100);
         }
+    }
 
-        function showManualBtn() {
-            if(document.getElementById('manual-btn')) return;
-            const div = document.createElement('div');
-            div.id = 'manual-btn';
-            div.className = 'console-line';
-            div.style.color = '#4ec9b0'; div.style.cursor = 'pointer';
-            div.innerHTML = `<span class="prompt">!</span> <span style="text-decoration:underline">[ System: 자동 재생 차단됨. 클릭하여 재생 ]</span>`;
-            div.onclick = () => {
-                div.style.display = 'none';
-                printLog("Retrying playback (User Action)...");
-                tryPlay(currentSongInfo, isRetrying);
-            };
-            document.getElementById('console-output').appendChild(div);
+    function checkSync() {
+        if(!player || !player.getCurrentTime) return;
+        const t = player.getCurrentTime();
+        let idx = -1;
+        for(let i=0; i<lyricsData.length; i++) {
+            if(t >= lyricsData[i].time) idx = i; else break;
         }
-
-        function parseLrc(lrc) {
-            const lines = [];
-            lrc.split('\n').forEach(line => {
-                const m = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
-                if(m && m[3].trim()) lines.push({ time: parseInt(m[1])*60 + parseFloat(m[2]), text: m[3].trim() });
-            });
-            return lines;
+        if(idx !== -1 && idx !== lastPrintedIndex) {
+            clearTimeouts();
+            printLyric(lyricsData[idx].text);
+            lastPrintedIndex = idx;
         }
-
-        function printLog(msg) {
-            const div = document.createElement('div');
-            div.className = 'console-line';
-            div.innerHTML = `<span class="prompt">player $</span><span>${msg}</span>`;
-            const consoleOut = document.getElementById('console-output');
-            consoleOut.appendChild(div);
-            consoleOut.scrollTop = consoleOut.scrollHeight;
-        }
-
-        function printLyric(text) {
-            const div = document.createElement('div');
-            div.className = 'console-line';
-            div.innerHTML = `<span class="prompt">></span><span class="lyrics-text"></span>`; 
-            const consoleOut = document.getElementById('console-output');
-            consoleOut.appendChild(div);
-            consoleOut.scrollTop = consoleOut.scrollHeight;
-            const target = div.querySelector('.lyrics-text');
-            const syllables = splitSyllables(text);
-            const duration = 2000; 
-            const step = Math.min(100, duration / syllables.length);
-            syllables.forEach((s, i) => {
-                const t = setTimeout(() => target.textContent += s, i * step);
-                timeouts.push(t);
-            });
-        }
-        function splitSyllables(text) {
-            const res = []; let cur = '';
-            for(let c of text) {
-                if(/[\u3131-\uD79D]/.test(c) || /[a-zA-Z0-9]/.test(c)) {
-                    if(cur) { res.push(cur); cur=''; } res.push(c);
-                } else { cur += c; if(res.length) res[res.length-1]+=c; cur=''; }
-            }
-            if(cur) res.push(cur);
-            return res;
-        }
-        function clearTimeouts() { timeouts.forEach(t=>clearTimeout(t)); timeouts = []; }
-
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('hidden-player', {
-                height: '100%', width: '100%',
-                videoId: 'M7lc1UVf-VE',
-                playerVars: { 'autoplay': 0, 'controls': 1, 'origin': window.location.origin },
-                events: {
-                    'onReady': () => { playerReady = true; document.getElementById('player-status').innerText = 'Player Ready'; },
-                    'onStateChange': onStateChange,
-                    'onError': onError
-                }
-            });
-        }
-
-        function onError(e) {
-            if(!currentSongInfo) return;
-            if(e.data === 150 || e.data === 101) {
-                if(!isRetrying) {
-                    printLog("! Audio blocked. Switching to Lyrics mode...");
-                    isRetrying = true;
-                    tryPlay(currentSongInfo, true);
-                } else { printLog("Error: Content blocked."); }
-            } else if (e.data === 2) {
-                setTimeout(() => tryPlay(currentSongInfo, isRetrying), 2000);
-            }
-        }
-
-        function onStateChange(e) {
-            if(e.data === YT.PlayerState.PLAYING) {
-                document.getElementById('status-left').innerText = "Playing: " + currentSongInfo.trackName;
-                if(loadTimeout) clearTimeout(loadTimeout);
-                const btn = document.getElementById('manual-btn');
-                if(btn) btn.style.display = 'none';
-                if(syncInterval) clearInterval(syncInterval);
-                syncInterval = setInterval(checkSync, 100);
-            }
-        }
-
-        function checkSync() {
-            if(!player || !player.getCurrentTime) return;
-            const t = player.getCurrentTime();
-            let idx = -1;
-            for(let i=0; i<lyricsData.length; i++) {
-                if(t >= lyricsData[i].time) idx = i; else break;
-            }
-            if(idx !== -1 && idx !== lastPrintedIndex) {
-                clearTimeouts();
-                printLyric(lyricsData[idx].text);
-                lastPrintedIndex = idx;
-            }
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
+
