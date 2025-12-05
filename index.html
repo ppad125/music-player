@@ -401,28 +401,27 @@
     }
     function clearTimeouts() { timeouts.forEach(t=>clearTimeout(t)); timeouts = []; }
 
-    // --- [중요] 유튜브 API 설정 수정됨 ---
+  // --- [수정된 코드] 초기 영상을 '한로로 - 입춘'으로 변경 ---
     function onYouTubeIframeAPIReady() {
-        // [수정됨] 로컬 파일 실행 시 origin이 'file://' 또는 null이 되어 API가 차단됨.
-        // 이를 방지하기 위해 로컬일 경우 origin을 더미 도메인으로 설정하거나 제거해야 함.
-        let originVal = window.location.origin;
-        if (!originVal || originVal === 'null' || originVal.startsWith('file://')) {
-            originVal = 'https://www.youtube.com'; // 로컬 테스트용 더미 오리진
-        }
+        const currentOrigin = window.location.origin;
 
         player = new YT.Player('hidden-player', {
             height: '100%', width: '100%',
-            videoId: 'M7lc1UVf-VE', // 초기 영상
+            
+            // 👇 여기가 핵심입니다! (기존 ID를 지우고 아래 ID로 교체)
+            videoId: 'kIiW3XRP7bU', // 한로로 - 입춘 Video ID
+            
             playerVars: { 
                 'autoplay': 0, 
                 'controls': 1,
-                'origin': originVal, // [수정] 오리진 강제 설정
-                'rel': 0 // 추천 영상 표시 끄기
+                'rel': 0,
+                'origin': currentOrigin, 
+                'enablejsapi': 1 
             },
             events: {
                 'onReady': () => { 
                     playerReady = true; 
-                    document.getElementById('player-status').innerText = 'Player Ready'; 
+                    document.getElementById('player-status').innerText = 'Player Ready';
                 },
                 'onStateChange': onStateChange,
                 'onError': onError
