@@ -294,18 +294,12 @@
         } catch(e) { list.innerHTML = '<li class="song-item">Error fetching data.</li>'; }
     }
 
-// 1. [수정됨] 곡 선택 시 초기화 로직 강화
-    function loadSong(song) {
-        // [핵심] 이전 곡의 싱크 루프를 즉시 차단
-        if(syncInterval) {
-            clearInterval(syncInterval);
-            syncInterval = null;
-        }
-
-        // [핵심] 플레이어가 있다면 강제로 멈추고 시간을 0으로 초기화
+function loadSong(song) {
+        // [중요] 이전 싱크 루프 및 영상 완전 초기화
+        if(syncInterval) { clearInterval(syncInterval); syncInterval = null; }
+        
         if(player && player.stopVideo) {
-            player.stopVideo(); // 영상 멈춤 -> 시간 0으로 리셋됨
-            player.clearVideo(); // (선택사항) 비디오 잔상 제거
+            player.stopVideo(); // 영상 멈춤 -> 시간 0초로 리셋
         }
 
         currentSongInfo = song;
@@ -313,8 +307,8 @@
         lastPrintedIndex = -1;
         isRetrying = false;
         
-        clearTimeouts(); // 예약된 가사 출력 취소
-        document.getElementById('console-output').innerHTML = ''; // 콘솔 청소
+        clearTimeouts();
+        document.getElementById('console-output').innerHTML = ''; 
         
         printLog(`Selected: ${song.trackName} - ${song.artistName}`);
         document.getElementById('status-left').innerText = `Loading ${song.trackName}...`;
@@ -322,36 +316,44 @@
         tryPlay(song, false);
     }
 
-    // 2. [수정됨] 재생 시도 로직
-    function tryPlay(song, useLyricsMode) {
+  function tryPlay(song, useLyricsMode) {
         if(!playerReady) {
             printLog("Waiting for Player API...");
             setTimeout(() => tryPlay(song, useLyricsMode), 1000);
             return;
         }
         
-        // 검색어 생성
-        const q = `${song.artistName} ${song.trackName} audio`; 
-        printLog(`Searching YouTube: ${q}`);
+        // 1. 자동 검색 시도 (혹시 될 수도 있으니 유지)
+        const q = `${song.artistName} ${song.trackName}`; 
+        printLog(`System: Searching '${q}'...`);
 
         if(player && player.loadPlaylist) {
-            // [중요] loadPlaylist 사용 시 'search' 모드는 브라우저 정책상
-            // 가끔 막힐 수 있습니다. stopVideo() 후 호출하면 성공률이 올라갑니다.
+            player.stopVideo(); // 기존 영상 정지
             player.loadPlaylist({
                 listType: 'search',
                 list: q,
                 index: 0,
                 startSeconds: 0
             });
-            player.setVolume(100);
+            setTimeout(() => { try { player.playVideo(); } catch(e){} }, 1000);
         }
 
-        if(loadTimeout) clearTimeout(loadTimeout);
-        // 5초 뒤에도 재생(상태 1)이 안 되면 수동 버튼 표시
-        loadTimeout = setTimeout(() => {
-            const state = player.getPlayerState();
-            if(state !== YT.PlayerState.PLAYING) showManualBtn();
-        }, 5000);
+        // 2. [핵심] 영상이 안 바뀔 때를 위한 "수동 링크 입력" 버튼 생성
+        setTimeout(() => {
+            const div = document.createElement('div');
+            div.className = 'console-line';
+            div.style.cursor = 'pointer';
+            div.style.color = '#ff7b72'; // 붉은 계열 (강조)
+            div.innerHTML = `<span class="prompt">?</span> <span style="text-decoration:underline; font-weight:bold;">[Troubleshoot] 영상이 바뀌지 않나요? (클릭)</span>`;
+            
+            div.onclick = () => {
+                const url = prompt("유튜브 영상 주소(URL)를 붙여넣으세요:\n(예: https://youtu.be/...)");
+                if(url) loadVideoFromUrl(url);
+            };
+            
+            document.getElementById('console-output').appendChild(div);
+            document.getElementById('console-output').scrollTop = document.getElementById('console-output').scrollHeight;
+        }, 1500); // 1.5초 뒤에 버튼 표시
     }
 
     function showManualBtn() {
@@ -491,7 +493,36 @@
             lastPrintedIndex = idx;
         }
     }
+
+// 유튜브 URL에서 ID 추출 후 재생하는 함수
+    function loadVideoFromUrl(url) {
+        let videoId = null;
+        
+        // 다양한 유튜브 URL 패턴 처리
+        if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1].split('?')[0];
+        } else if (url.includes('v=')) {
+            videoId = url.split('v=')[1].split('&')[0];
+        } else if (url.includes('/embed/')) {
+            videoId = url.split('/embed/')[1].split('?')[0];
+        }
+
+        if (videoId) {
+            printLog(`Override: Loading Video ID [${videoId}]...`);
+            if(player && player.loadVideoById) {
+                player.stopVideo();
+                player.loadVideoById(videoId);
+                player.playVideo();
+                
+                // 싱크 및 타이머 리셋
+                if(syncInterval) clearInterval(syncInterval);
+                lastPrintedIndex = -1;
+            }
+        } else {
+            alert("유효하지 않은 유튜브 URL입니다.");
+        }
+    }
+
 </script>
 </body>
 </html>
-
