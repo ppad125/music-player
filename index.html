@@ -7,7 +7,7 @@
     <style>
         /* --- 공통 설정 --- */
         :root {
-            --bg-color: #0d1117; /* 깃허브 다크 모드 배경색 */
+            --bg-color: #0d1117;
             --text-color: #c9d1d9;
             --accent-blue: #58a6ff;
             --btn-blue: #1f6feb;
@@ -22,9 +22,7 @@
             overflow: hidden;
         }
 
-        /* =========================================
-           1. 랜딩 페이지 (시작 화면) 스타일
-           ========================================= */
+        /* 1. 랜딩 페이지 */
         #landing-page {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column;
@@ -33,15 +31,11 @@
             z-index: 2000;
             transition: opacity 0.5s ease, transform 0.5s ease;
         }
-
-        /* 상단 로고 */
         .brand-logo {
             position: absolute; top: 20px; left: 30px;
             font-family: 'Consolas', monospace;
             font-size: 1.2rem; color: #58a6ff; font-weight: bold;
         }
-
-        /* 메인 타이틀 */
         .hero-title {
             font-size: 3.5rem; font-weight: 800; margin-bottom: 1rem; color: #fff;
             text-align: center; letter-spacing: -1px;
@@ -50,8 +44,6 @@
             font-size: 1.1rem; color: #8b949e; margin-bottom: 2.5rem;
             text-align: center; line-height: 1.6;
         }
-
-        /* 버튼 그룹 */
         .btn-group { display: flex; gap: 15px; margin-bottom: 40px; }
         .btn {
             padding: 12px 24px; font-size: 1rem; font-weight: 600;
@@ -62,13 +54,11 @@
             background-color: #1f6feb; color: #fff;
         }
         .btn-primary:hover { background-color: #388bfd; }
-        
         .btn-outline {
             background-color: transparent; border: 1px solid #30363d; color: #c9d1d9;
         }
         .btn-outline:hover { border-color: #8b949e; background-color: #161b22; }
 
-        /* 장식용 코드 박스 (사진과 동일하게 구현) */
         .code-preview-box {
             background-color: #161b22;
             border: 1px solid #30363d;
@@ -80,449 +70,533 @@
             color: #e6edf3;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        /* 코드 하이라이팅 색상 (Dracula 테마 느낌) */
-        .cp-cls { color: #ff7b72; } /* class, void (Pink) */
-        .cp-func { color: #d2a8ff; } /* method (Purple) */
-        .cp-str { color: #a5d6ff; } /* string (Blue) */
-        .cp-kw { color: #ff7b72; }  /* keyword */
+        .cp-cls { color: #ff7b72; }
+        .cp-func { color: #d2a8ff; }
+        .cp-str { color: #a5d6ff; }
+        .cp-kw { color: #ff7b72; }
         .cp-dots { color: #8b949e; margin-bottom: 10px; display: block; font-size: 20px; line-height: 10px;}
 
-
-        /* =========================================
-           2. VS Code 플레이어 스타일 (숨김 상태)
-           ========================================= */
+        /* 2. VS Code 플레이어 */
         #player-page {
-            display: none; /* 처음에 안 보임 */
+            display: none;
             height: 100%; width: 100%;
             flex-direction: column;
             opacity: 0;
             transition: opacity 0.8s ease;
         }
 
-        /* 아래는 기존 VS Code 스타일 그대로 */
         :root {
             --vsc-bg: #1e1e1e;
             --vsc-sidebar: #252526;
             --vsc-terminal: #1e1e1e;
             --vsc-text: #d4d4d4;
-            --vsc-keyword: #569cd6; 
-            --vsc-string: #ce9178;  
+            --vsc-keyword: #569cd6;
+            --vsc-string: #ce9178;
             --vsc-bar: #007acc;
         }
-        #workspace { display: flex; flex: 1; overflow: hidden; background-color: var(--vsc-bg); font-family: 'Consolas', monospace; }
-        #sidebar { width: 300px; background-color: var(--vsc-sidebar); border-right: 1px solid #333; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 10px; font-size: 11px; font-weight: bold; color: #bbb; display: flex; justify-content: space-between; }
+        #workspace {
+            display: flex; flex: 1; overflow: hidden;
+            background-color: var(--vsc-bg);
+            font-family: 'Consolas', monospace;
+        }
+        #sidebar {
+            width: 300px; background-color: var(--vsc-sidebar);
+            border-right: 1px solid #333; display: flex; flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 10px; font-size: 11px; font-weight: bold; color: #bbb;
+            display: flex; justify-content: space-between;
+        }
         .search-box { padding: 10px; border-bottom: 1px solid #333; }
-        input { width: 90%; background-color: #3c3c3c; border: 1px solid #3c3c3c; color: white; padding: 6px 8px; outline: none; font-family: inherit; }
+        input {
+            width: 90%; background-color: #3c3c3c; border: 1px solid #3c3c3c;
+            color: white; padding: 6px 8px; outline: none; font-family: inherit;
+        }
         input:focus { border-color: var(--vsc-keyword); }
-        #result-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
-        .song-item { padding: 8px 15px; cursor: pointer; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid transparent; color: var(--vsc-text); }
+        #result-list {
+            flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0;
+        }
+        .song-item {
+            padding: 8px 15px; cursor: pointer; font-size: 13px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            border-left: 3px solid transparent; color: var(--vsc-text);
+        }
         .song-item:hover { background-color: #2a2d2e; }
         .song-item.active { background-color: #37373d; border-left-color: var(--vsc-keyword); }
+
         #main-container { flex: 1; display: flex; flex-direction: column; }
-        #editor-upper { flex: 4; display: flex; flex-direction: column; border-bottom: 1px solid #333; }
+        #editor-upper {
+            flex: 4; display: flex; flex-direction: column;
+            border-bottom: 1px solid #333;
+        }
         .tab-bar { background-color: #2d2d2d; height: 35px; display: flex; }
-        .tab { background-color: var(--vsc-bg); padding: 0 15px; display: flex; align-items: center; font-size: 13px; border-top: 2px solid var(--vsc-keyword); color: white; }
-        #fake-code-area { flex: 1; padding: 10px 20px; overflow-y: auto; font-size: 14px; line-height: 1.5; color: var(--vsc-text); }
-        .line-num { color: #858585; margin-right: 20px; user-select: none; text-align: right; display: inline-block; width: 30px;}
-        .kw { color: var(--vsc-keyword); } .str { color: var(--vsc-string); } .cls { color: #4ec9b0; } .mth { color: #dcdcaa; } .cmt { color: #6a9955; }
-        #terminal-lower { flex: 6; background-color: var(--vsc-terminal); display: flex; flex-direction: column; border-top: 1px solid #333; }
-        .terminal-tabs { display: flex; background-color: #252526; height: 30px; align-items: center; padding-left: 10px; border-bottom: 1px solid #333; }
-        .terminal-tab { font-size: 11px; color: #888; margin-right: 20px; cursor: pointer; }
+        .tab {
+            background-color: var(--vsc-bg); padding: 0 15px;
+            display: flex; align-items: center; font-size: 13px;
+            border-top: 2px solid var(--vsc-keyword); color: white;
+        }
+        #fake-code-area {
+            flex: 1; padding: 10px 20px;
+            overflow-y: auto; font-size: 14px; line-height: 1.5; color: var(--vsc-text);
+        }
+        .line-num {
+            color: #858585; margin-right: 20px; user-select: none;
+            text-align: right; display: inline-block; width: 30px;
+        }
+        .kw { color: var(--vsc-keyword); }
+        .str { color: var(--vsc-string); }
+        .cls { color: #4ec9b0; }
+        .mth { color: #dcdcaa; }
+        .cmt { color: #6a9955; }
+
+        #terminal-lower {
+            flex: 6; background-color: var(--vsc-terminal);
+            display: flex; flex-direction: column; border-top: 1px solid #333;
+        }
+        .terminal-tabs {
+            display: flex; background-color: #252526; height: 30px;
+            align-items: center; padding-left: 10px; border-bottom: 1px solid #333;
+        }
+        .terminal-tab {
+            font-size: 11px; color: #888; margin-right: 20px; cursor: pointer;
+        }
         .terminal-tab.active { color: white; border-bottom: 1px solid white; }
-        #console-output { flex: 1; padding: 15px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 18px; white-space: pre-wrap; color: #cccccc; }
-        .console-line { margin-bottom: 6px; display: flex; line-height: 1.4; }
+
+        /* 여기 콘솔에 스크롤을 확실히 켠다 */
+        #console-output {
+            flex: 1; padding: 15px;
+            overflow-y: auto;          /* 스크롤 가능하게 */
+            font-family: 'Consolas', monospace;
+            font-size: 18px;
+            white-space: pre-wrap;
+            color: #cccccc;
+        }
+        .console-line {
+            margin-bottom: 6px; display: flex; line-height: 1.4;
+        }
         .prompt { color: var(--vsc-keyword); margin-right: 10px; font-weight: bold; }
         .lyrics-text { color: #ce9178; transition: color 0.1s; }
-        #status-bar { height: 22px; background-color: var(--vsc-bar); color: white; font-size: 12px; display: flex; align-items: center; padding: 0 10px; justify-content: space-between; }
-        
+
+        #status-bar {
+            height: 22px; background-color: var(--vsc-bar);
+            color: white; font-size: 12px; display: flex;
+            align-items: center; padding: 0 10px; justify-content: space-between;
+        }
+
         /* 유튜브 플레이어 (우측 하단 고정) */
         #player-container {
             position: fixed; bottom: 30px; right: 20px; width: 300px; height: 170px;
-            z-index: 1000; border: 1px solid #007acc; background: #000; box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            display: none; /* 첫 화면에선 숨김 */
+            z-index: 1000; border: 1px solid #007acc; background: #000;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="landing-page">
-        <div class="brand-logo">&lt;Lyric.java /&gt;</div>
-        
-        <div class="hero-title">코드로 보는 가사</div>
-        <div class="hero-desc">
-            좋아하는 음악을 개발자의 언어로 재해석하세요.<br>
-            음절 단위 싱크와 VS Code 감성이 만난 새로운 경험.
-        </div>
-
-        <div class="btn-group">
-            <button class="btn btn-primary" onclick="startExperience()">지금 시작하기</button>
-            <button class="btn btn-outline" onclick="shareLink()">공유하기</button>
-        </div>
-
-        <div class="code-preview-box">
-            <span class="cp-dots">● ● ●</span>
-            <div><span class="cp-kw">class</span> Emotion {</div>
-            <div>&nbsp;&nbsp;<span class="cp-kw">void</span> <span class="cp-func">playMusic</span>() {</div>
-            <div>&nbsp;&nbsp;&nbsp;&nbsp;System.out.<span class="cp-func">println</span>(<span class="cp-str">"🎵 Music Start..."</span>);</div>
-            <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="cp-kw">return</span> <span class="cp-str">"Healing"</span>;</div>
-            <div>&nbsp;&nbsp;}</div>
-            <div>}</div>
-        </div>
+<div id="landing-page">
+    <div class="brand-logo">&lt;Lyric.java /&gt;</div>
+    <div class="hero-title">코드로 보는 가사</div>
+    <div class="hero-desc">
+        좋아하는 음악을 개발자의 언어로 재해석하세요.<br>
+        음절 단위 싱크와 VS Code 감성이 만난 새로운 경험.
     </div>
 
+    <div class="btn-group">
+        <button class="btn btn-primary" onclick="startExperience()">지금 시작하기</button>
+        <button class="btn btn-outline" onclick="shareLink()">공유하기</button>
+    </div>
 
-    <div id="player-page">
-        <div id="workspace">
-            <div id="sidebar">
-                <div class="sidebar-header"><span>EXPLORER</span><span>...</span></div>
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search (Enter)" onkeypress="handleEnter(event)">
-                </div>
-                <ul id="result-list">
-                    <li class="song-item" style="color: gray;">검색어를 입력하세요.</li>
-                </ul>
+    <div class="code-preview-box">
+        <span class="cp-dots">● ● ●</span>
+        <div><span class="cp-kw">class</span> Emotion {</div>
+        <div>&nbsp;&nbsp;<span class="cp-kw">void</span> <span class="cp-func">playMusic</span>() {</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;System.out.<span class="cp-func">println</span>(<span class="cp-str">"🎵 Music Start..."</span>);</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="cp-kw">return</span> <span class="cp-str">"Healing"</span>;</div>
+        <div>&nbsp;&nbsp;}</div>
+        <div>}</div>
+    </div>
+</div>
+
+<div id="player-page">
+    <div id="workspace">
+        <div id="sidebar">
+            <div class="sidebar-header"><span>EXPLORER</span><span>...</span></div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search (Enter)" onkeypress="handleEnter(event)">
             </div>
-            <div id="main-container">
-                <div id="editor-upper">
-                    <div class="tab-bar"><div class="tab"><span>🎵 MusicPlayer.java</span></div></div>
-                    <div id="fake-code-area"></div>
+            <ul id="result-list">
+                <li class="song-item" style="color: gray;">검색어를 입력하세요.</li>
+            </ul>
+        </div>
+        <div id="main-container">
+            <div id="editor-upper">
+                <div class="tab-bar"><div class="tab"><span>🎵 MusicPlayer.java</span></div></div>
+                <div id="fake-code-area"></div>
+            </div>
+            <div id="terminal-lower">
+                <div class="terminal-tabs">
+                    <div class="terminal-tab">PROBLEMS</div>
+                    <div class="terminal-tab">OUTPUT</div>
+                    <div class="terminal-tab active">DEBUG CONSOLE</div>
                 </div>
-                <div id="terminal-lower">
-                    <div class="terminal-tabs">
-                        <div class="terminal-tab">PROBLEMS</div>
-                        <div class="terminal-tab">OUTPUT</div>
-                        <div class="terminal-tab active">DEBUG CONSOLE</div>
-                    </div>
-                    <div id="console-output">
-                        <div class="console-line"><span class="prompt">player $</span><span>Ready. System Initialized.</span></div>
-                    </div>
+                <div id="console-output">
+                    <div class="console-line"><span class="prompt">player $</span><span>Ready. System Initialized.</span></div>
                 </div>
             </div>
         </div>
-        <div id="status-bar">
-            <div id="status-left">Ready</div>
-            <div id="status-right">Java 17 • UTF-8 • <span id="player-status">Waiting...</span></div>
-        </div>
     </div>
-
-    <div id="player-container">
-        <div id="hidden-player"></div>
+    <div id="status-bar">
+        <div id="status-left">Ready</div>
+        <div id="status-right">Java 17 • UTF-8 • <span id="player-status">Waiting...</span></div>
     </div>
+</div>
 
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <script>
-    // --- [A] 화면 전환 로직 ---
-    function startExperience() {
-        const landing = document.getElementById('landing-page');
-        const playerPage = document.getElementById('player-page');
-        const playerContainer = document.getElementById('player-container');
+<div id="player-container">
+    <div id="hidden-player"></div>
+</div>
 
-        // 애니메이션 효과
-        landing.style.opacity = '0';
-        landing.style.transform = 'scale(0.95)';
-        
-        setTimeout(() => {
-            landing.style.display = 'none';
-            playerPage.style.display = 'flex';
-            playerContainer.style.display = 'block'; // 플레이어 컨테이너 보이기
-            
-            // 플레이어 등장 애니메이션
-            setTimeout(() => { playerPage.style.opacity = '1'; }, 50);
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+/* --- A. 화면 전환 --- */
+function startExperience() {
+    const landing = document.getElementById('landing-page');
+    const playerPage = document.getElementById('player-page');
+    const playerContainer = document.getElementById('player-container');
 
-            // [수정됨] 화면 전환 후 플레이어가 준비되지 않았을 수 있으므로 리사이즈 트리거
-            if(player && player.getIframe()) {
-                player.getIframe().dispatchEvent(new Event('resize'));
-            }
-        }, 500);
-    }
+    landing.style.opacity = '0';
+    landing.style.transform = 'scale(0.95)';
 
-    function shareLink() {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-            alert("링크가 복사되었습니다!");
-        }).catch(() => alert("복사 실패"));
-    }
+    setTimeout(() => {
+        landing.style.display = 'none';
+        playerPage.style.display = 'flex';
+        playerContainer.style.display = 'block';
 
-    // --- [B] 플레이어 기능 ---
-    const dummyCode = [
-        `<span class="kw">package</span> com.vscode.music;`,
-        ``,
-        `<span class="kw">import</span> java.util.EmotionalEngine;`,
-        `<span class="kw">import</span> java.util.SyllableSync;`,
-        ``,
-        `<span class="kw">public class</span> <span class="cls">MusicPlayer</span> {`,
-        `    <span class="kw">public static void</span> <span class="mth">main</span>(String[] args) {`,
-        `        <span class="cmt">// 1. 플레이어 엔진 초기화</span>`,
-        `        <span class="cls">AudioStream</span> stream = <span class="kw">new</span> <span class="cls">AudioStream</span>();`,
-        `        <span class="cmt">// 2. 가사 출력 및 싱크</span>`,
-        `        <span class="kw">while</span> (stream.<span class="mth">isPlaying</span>()) {`,
-        `            <span class="cls">System</span>.out.<span class="mth">print</span>(stream.<span class="mth">getLyric</span>());`,
-        `        }`,
-        `    }`,
-        `}`
-    ];
-    document.getElementById('fake-code-area').innerHTML = dummyCode.map((l,i)=>`<div><span class="line-num">${i+1}</span>${l}</div>`).join('');
+        setTimeout(() => { playerPage.style.opacity = '1'; }, 50);
 
-    let lyricsData = [], player, syncInterval, currentSongInfo, isRetrying = false;
-    let lastPrintedIndex = -1, timeouts = [], loadTimeout, playerReady = false;
-
-    function handleEnter(e) { if(e.key === 'Enter') searchMusic(); }
-
-    async function searchMusic() {
-        const query = document.getElementById('searchInput').value;
-        if(!query) return;
-        const list = document.getElementById('result-list');
-        list.innerHTML = '<li class="song-item">Searching...</li>';
-        try {
-            const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
-            const data = await res.json();
-            const songs = data.filter(s => s.syncedLyrics);
-            list.innerHTML = '';
-            if(!songs.length) { list.innerHTML = '<li class="song-item">No synced lyrics found.</li>'; return; }
-            songs.forEach(song => {
-                const li = document.createElement('li');
-                li.className = 'song-item';
-                li.innerHTML = `🎵 ${song.artistName} - ${song.trackName}`;
-                li.onclick = () => {
-                    document.querySelectorAll('.song-item').forEach(e => e.classList.remove('active'));
-                    li.classList.add('active');
-                    loadSong(song);
-                };
-                list.appendChild(li);
-            });
-        } catch(e) { list.innerHTML = '<li class="song-item">Error fetching data.</li>'; }
-    }
-
-function loadSong(song) {
-        // [중요] 이전 싱크 루프 및 영상 완전 초기화
-        if(syncInterval) { clearInterval(syncInterval); syncInterval = null; }
-        
-        if(player && player.stopVideo) {
-            player.stopVideo(); // 영상 멈춤 -> 시간 0초로 리셋
+        if (player && player.getIframe()) {
+            player.getIframe().dispatchEvent(new Event('resize'));
         }
+    }, 500);
+}
 
-        currentSongInfo = song;
-        lyricsData = parseLrc(song.syncedLyrics);
-        lastPrintedIndex = -1;
-        isRetrying = false;
-        
-        clearTimeouts();
-        document.getElementById('console-output').innerHTML = ''; 
-        
-        printLog(`Selected: ${song.trackName} - ${song.artistName}`);
-        document.getElementById('status-left').innerText = `Loading ${song.trackName}...`;
-        
-        tryPlay(song, false);
-    }
+function shareLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        alert("링크가 복사되었습니다!");
+    }).catch(() => alert("복사 실패"));
+}
 
-  function tryPlay(song, useLyricsMode) {
-        if(!playerReady) {
-            printLog("Waiting for Player API...");
-            setTimeout(() => tryPlay(song, useLyricsMode), 1000);
+/* B. VS Code 가짜 코드 */
+const dummyCode = [
+    `<span class="kw">package</span> com.vscode.music;`,
+    ``,
+    `<span class="kw">import</span> java.util.EmotionalEngine;`,
+    `<span class="kw">import</span> java.util.SyllableSync;`,
+    ``,
+    `<span class="kw">public class</span> <span class="cls">MusicPlayer</span> {`,
+    `    <span class="kw">public static void</span> <span class="mth">main</span>(String[] args) {`,
+    `        <span class="cmt">// 1. 플레이어 엔진 초기화</span>`,
+    `        <span class="cls">AudioStream</span> stream = <span class="kw">new</span> <span class="cls">AudioStream</span>();`,
+    `        <span class="cmt">// 2. 가사 출력 및 싱크</span>`,
+    `        <span class="kw">while</span> (stream.<span class="mth">isPlaying</span>()) {`,
+    `            <span class="cls">System</span>.out.<span class="mth">print</span>(stream.<span class="mth">getLyric</span>());`,
+    `        }`,
+    `    }`,
+    `}`
+];
+document.getElementById('fake-code-area').innerHTML =
+    dummyCode.map((l,i)=>`<div><span class="line-num">${i+1}</span>${l}</div>`).join('');
+
+/* C. 상태 변수들 */
+let lyricsData = [];
+let player, syncInterval, currentSongInfo, isRetrying = false;
+let lastPrintedIndex = -1, timeouts = [], playerReady = false;
+
+function handleEnter(e) {
+    if(e.key === 'Enter') searchMusic();
+}
+
+/* D. 검색 및 LRC 로딩 */
+async function searchMusic() {
+    const query = document.getElementById('searchInput').value;
+    if(!query) return;
+
+    const list = document.getElementById('result-list');
+    list.innerHTML = '<li class="song-item">Searching...</li>';
+
+    try {
+        const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        const songs = data.filter(s => s.syncedLyrics);  // syncedLyrics 사용[web:2][web:13]
+
+        list.innerHTML = '';
+        if(!songs.length) {
+            list.innerHTML = '<li class="song-item">No synced lyrics found.</li>';
             return;
         }
-        
-        // 1. 자동 검색 시도 (혹시 될 수도 있으니 유지)
-        const q = `${song.artistName} ${song.trackName}`; 
-        printLog(`System: Searching '${q}'...`);
 
-        if(player && player.loadPlaylist) {
-            player.stopVideo(); // 기존 영상 정지
-            player.loadPlaylist({
-                listType: 'search',
-                list: q,
-                index: 0,
-                startSeconds: 0
-            });
-            setTimeout(() => { try { player.playVideo(); } catch(e){} }, 1000);
-        }
-
-        // 2. [핵심] 영상이 안 바뀔 때를 위한 "수동 링크 입력" 버튼 생성
-        setTimeout(() => {
-            const div = document.createElement('div');
-            div.className = 'console-line';
-            div.style.cursor = 'pointer';
-            div.style.color = '#ff7b72'; // 붉은 계열 (강조)
-            div.innerHTML = `<span class="prompt">?</span> <span style="text-decoration:underline; font-weight:bold;">[Troubleshoot] 영상이 바뀌지 않나요? (클릭)</span>`;
-            
-            div.onclick = () => {
-                const url = prompt("유튜브 영상 주소(URL)를 붙여넣으세요:\n(예: https://youtu.be/...)");
-                if(url) loadVideoFromUrl(url);
+        songs.forEach(song => {
+            const li = document.createElement('li');
+            li.className = 'song-item';
+            li.innerHTML = `🎵 ${song.artistName} - ${song.trackName}`;
+            li.onclick = () => {
+                document.querySelectorAll('.song-item').forEach(e => e.classList.remove('active'));
+                li.classList.add('active');
+                loadSong(song);
             };
-            
-            document.getElementById('console-output').appendChild(div);
-            document.getElementById('console-output').scrollTop = document.getElementById('console-output').scrollHeight;
-        }, 1500); // 1.5초 뒤에 버튼 표시
+            list.appendChild(li);
+        });
+    } catch(e) {
+        list.innerHTML = '<li class="song-item">Error fetching data.</li>';
+    }
+}
+
+function loadSong(song) {
+    if(syncInterval) { clearInterval(syncInterval); syncInterval = null; }
+    if(player && player.stopVideo) {
+        player.stopVideo();
     }
 
-    function showManualBtn() {
-        if(document.getElementById('manual-btn')) return;
+    currentSongInfo = song;
+    lyricsData = parseLrc(song.syncedLyrics);   // LRC → 배열[web:2][web:13]
+    lastPrintedIndex = -1;
+    isRetrying = false;
+
+    clearTimeouts();
+    document.getElementById('console-output').innerHTML = '';
+
+    printLog(`Selected: ${song.trackName} - ${song.artistName}`);
+    document.getElementById('status-left').innerText = `Loading ${song.trackName}...`;
+
+    tryPlay(song);
+}
+
+function tryPlay(song) {
+    if(!playerReady) {
+        printLog("Waiting for Player API...");
+        setTimeout(() => tryPlay(song), 1000);
+        return;
+    }
+
+    const q = `${song.artistName} ${song.trackName}`;
+    printLog(`System: Searching '${q}'...`);
+
+    if(player && player.loadPlaylist) {
+        player.stopVideo();
+        player.loadPlaylist({
+            listType: 'search',
+            list: q,
+            index: 0,
+            startSeconds: 0
+        });
+        setTimeout(() => { try { player.playVideo(); } catch(e){} }, 1000);
+    }
+
+    // 트러블슈트용 안내 클릭
+    setTimeout(() => {
+        if (document.getElementById('manual-troubleshoot')) return;
         const div = document.createElement('div');
-        div.id = 'manual-btn';
+        div.id = 'manual-troubleshoot';
         div.className = 'console-line';
-        div.style.color = '#4ec9b0'; div.style.cursor = 'pointer';
-        div.innerHTML = `<span class="prompt">!</span> <span style="text-decoration:underline">[ System: 재생이 차단되었습니다. 클릭하여 재생 ]</span>`;
+        div.style.cursor = 'pointer';
+        div.style.color = '#ff7b72';
+        div.innerHTML = `<span class="prompt">?</span> <span style="text-decoration:underline; font-weight:bold;">[Troubleshoot] 영상이 바뀌지 않나요? (클릭)</span>`;
+
         div.onclick = () => {
-            div.style.display = 'none';
-            printLog("Retrying playback (User Action)...");
-            player.playVideo(); // 단순히 playVideo만 다시 호출
+            const url = prompt("유튜브 영상 주소(URL)를 붙여넣으세요:\n(예: https://youtu.be/...)");
+            if(url) loadVideoFromUrl(url);
         };
-        document.getElementById('console-output').appendChild(div);
-    }
 
-    function parseLrc(lrc) {
-        const lines = [];
-        lrc.split('\n').forEach(line => {
-            const m = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
-            if(m && m[3].trim()) lines.push({ time: parseInt(m[1])*60 + parseFloat(m[2]), text: m[3].trim() });
-        });
-        return lines;
-    }
+        const out = document.getElementById('console-output');
+        out.appendChild(div);
+        out.scrollTop = out.scrollHeight;
+    }, 1500);
+}
 
-    function printLog(msg) {
-        const div = document.createElement('div');
-        div.className = 'console-line';
-        div.innerHTML = `<span class="prompt">player $</span><span>${msg}</span>`;
-        const consoleOut = document.getElementById('console-output');
-        consoleOut.appendChild(div);
-        consoleOut.scrollTop = consoleOut.scrollHeight;
-    }
-
-    function printLyric(text) {
-        const div = document.createElement('div');
-        div.className = 'console-line';
-        div.innerHTML = `<span class="prompt">></span><span class="lyrics-text"></span>`; 
-        const consoleOut = document.getElementById('console-output');
-        consoleOut.appendChild(div);
-        consoleOut.scrollTop = consoleOut.scrollHeight;
-        const target = div.querySelector('.lyrics-text');
-        const syllables = splitSyllables(text);
-        const duration = 2000; 
-        const step = Math.min(100, duration / syllables.length);
-        syllables.forEach((s, i) => {
-            const t = setTimeout(() => target.textContent += s, i * step);
-            timeouts.push(t);
-        });
-    }
-    function splitSyllables(text) {
-        const res = []; let cur = '';
-        for(let c of text) {
-            if(/[\u3131-\uD79D]/.test(c) || /[a-zA-Z0-9]/.test(c)) {
-                if(cur) { res.push(cur); cur=''; } res.push(c);
-            } else { cur += c; if(res.length) res[res.length-1]+=c; cur=''; }
+function parseLrc(lrc) {
+    const lines = [];
+    lrc.split('\n').forEach(line => {
+        const m = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
+        if(m && m[3].trim()) {
+            lines.push({
+                time: parseInt(m[1]) * 60 + parseFloat(m[2]),
+                text: m[3].trim()
+            });
         }
-        if(cur) res.push(cur);
-        return res;
+    });
+    return lines;
+}
+
+/* E. 콘솔 출력 관련 */
+function printLog(msg) {
+    const div = document.createElement('div');
+    div.className = 'console-line';
+    div.innerHTML = `<span class="prompt">player $</span><span>${msg}</span>`;
+    const consoleOut = document.getElementById('console-output');
+    consoleOut.appendChild(div);
+    consoleOut.scrollTop = consoleOut.scrollHeight;
+}
+
+/* 한 줄 출력: LRC 간격 기반 타이핑 */
+function printLyricByIndex(idx) {
+    const line = lyricsData[idx];
+    const next = lyricsData[idx + 1];
+    let durationMs;
+
+    if (next) {
+        durationMs = (next.time - line.time) * 1000; // 초 → ms
+    } else {
+        durationMs = 2500; // 마지막 줄 기본값
     }
-    function clearTimeouts() { timeouts.forEach(t=>clearTimeout(t)); timeouts = []; }
 
-  // --- [수정된 코드] 초기 영상을 '한로로 - 입춘'으로 변경 ---
-    function onYouTubeIframeAPIReady() {
-        const currentOrigin = window.location.origin;
+    // 너무 짧거나 너무 긴 경우 보정
+    durationMs = Math.max(600, Math.min(4000, durationMs));
+    printLyric(line.text, durationMs);
+}
 
-        player = new YT.Player('hidden-player', {
-            height: '100%', width: '100%',
-            
-            // 👇 여기가 핵심입니다! (기존 ID를 지우고 아래 ID로 교체)
-            videoId: 'kIiW3XRP7bU', // 한로로 - 입춘 Video ID
-            
-            playerVars: { 
-                'autoplay': 0, 
-                'controls': 1,
-                'rel': 0,
-                'origin': currentOrigin, 
-                'enablejsapi': 1 
-            },
-            events: {
-                'onReady': () => { 
-                    playerReady = true; 
-                    document.getElementById('player-status').innerText = 'Player Ready';
-                },
-                'onStateChange': onStateChange,
-                'onError': onError
+function printLyric(text, durationMs) {
+    const div = document.createElement('div');
+    div.className = 'console-line';
+    div.innerHTML = `<span class="prompt">></span><span class="lyrics-text"></span>`;
+
+    const consoleOut = document.getElementById('console-output');
+    consoleOut.appendChild(div);
+    consoleOut.scrollTop = consoleOut.scrollHeight;
+
+    const target = div.querySelector('.lyrics-text');
+    const syllables = splitSyllables(text);
+
+    // 최소/최대 step 제한
+    let step = durationMs / Math.max(syllables.length, 1);
+    step = Math.max(25, Math.min(120, step));
+
+    syllables.forEach((s, i) => {
+        const t = setTimeout(() => {
+            target.textContent += s;
+            consoleOut.scrollTop = consoleOut.scrollHeight;
+        }, i * step);
+        timeouts.push(t);
+    });
+}
+
+function splitSyllables(text) {
+    const res = [];
+    let cur = '';
+    for (let c of text) {
+        if (/[\u3131-\uD79D]/.test(c) || /[a-zA-Z0-9]/.test(c)) {
+            if (cur) {
+                res.push(cur);
+                cur = '';
             }
-        });
-    }
-
-    function onError(e) {
-        // 150, 101: 임베드 차단된 영상. 
-        // 100: 영상 없음
-        printLog(`Error Code: ${e.data}. Trying fallback...`);
-        if(currentSongInfo && !isRetrying) {
-            isRetrying = true;
-            // 에러 발생 시 그냥 playVideo를 다시 시도하거나 다음 곡 로직 필요
-            // 여기서는 사용자에게 알림
-            printLog("⚠️ Video restricted or unavailable.");
-        }
-    }
-
-    // 3. [수정됨] 상태 변화 감지 (싱크 시작 타이밍 조절)
-    function onStateChange(e) {
-        // 영상이 '재생 중(1)' 상태로 바뀌었을 때만 싱크 시작
-        if(e.data === YT.PlayerState.PLAYING) {
-            document.getElementById('status-left').innerText = "Playing: " + (currentSongInfo ? currentSongInfo.trackName : "Unknown");
-            
-            if(loadTimeout) clearTimeout(loadTimeout);
-            
-            const btn = document.getElementById('manual-btn');
-            if(btn) btn.style.display = 'none';
-            
-            // 기존 인터벌 확실히 제거 후 새로 시작
-            if(syncInterval) clearInterval(syncInterval);
-            
-            // [핵심] 바로 시작하지 않고 0.1초 뒤에 시작 (시간값 안정화)
-            syncInterval = setInterval(checkSync, 100);
-        } 
-        // 영상이 끝났거나(0), 일시정지(2) 되면 싱크 멈춤
-        else if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) {
-            if(syncInterval) clearInterval(syncInterval);
-        }
-    }
-
-    function checkSync() {
-        if(!player || !player.getCurrentTime) return;
-        const t = player.getCurrentTime();
-        let idx = -1;
-        for(let i=0; i<lyricsData.length; i++) {
-            if(t >= lyricsData[i].time) idx = i; else break;
-        }
-        if(idx !== -1 && idx !== lastPrintedIndex) {
-            clearTimeouts();
-            printLyric(lyricsData[idx].text);
-            lastPrintedIndex = idx;
-        }
-    }
-
-// 유튜브 URL에서 ID 추출 후 재생하는 함수
-    function loadVideoFromUrl(url) {
-        let videoId = null;
-        
-        // 다양한 유튜브 URL 패턴 처리
-        if (url.includes('youtu.be/')) {
-            videoId = url.split('youtu.be/')[1].split('?')[0];
-        } else if (url.includes('v=')) {
-            videoId = url.split('v=')[1].split('&')[0];
-        } else if (url.includes('/embed/')) {
-            videoId = url.split('/embed/')[1].split('?')[0];
-        }
-
-        if (videoId) {
-            printLog(`Override: Loading Video ID [${videoId}]...`);
-            if(player && player.loadVideoById) {
-                player.stopVideo();
-                player.loadVideoById(videoId);
-                player.playVideo();
-                
-                // 싱크 및 타이머 리셋
-                if(syncInterval) clearInterval(syncInterval);
-                lastPrintedIndex = -1;
-            }
+            res.push(c);
         } else {
-            alert("유효하지 않은 유튜브 URL입니다.");
+            cur += c;
+            if (res.length) res[res.length - 1] += c;
+            cur = '';
         }
     }
+    if (cur) res.push(cur);
+    return res;
+}
 
+function clearTimeouts() {
+    timeouts.forEach(t => clearTimeout(t));
+    timeouts = [];
+}
+
+/* F. 유튜브 IFrame API */
+function onYouTubeIframeAPIReady() {
+    const currentOrigin = window.location.origin;
+
+    player = new YT.Player('hidden-player', {
+        height: '100%', width: '100%',
+        videoId: 'kIiW3XRP7bU',
+        playerVars: {
+            autoplay: 0,
+            controls: 1,
+            rel: 0,
+            origin: currentOrigin,
+            enablejsapi: 1
+        },
+        events: {
+            onReady: () => {
+                playerReady = true;
+                document.getElementById('player-status').innerText = 'Player Ready';
+            },
+            onStateChange: onStateChange,
+            onError: onError
+        }
+    });
+}
+
+function onError(e) {
+    printLog(`Error Code: ${e.data}. Trying fallback...`);
+    if(currentSongInfo && !isRetrying) {
+        isRetrying = true;
+        printLog("⚠️ Video restricted or unavailable.");
+    }
+}
+
+function onStateChange(e) {
+    if(e.data === YT.PlayerState.PLAYING) {
+        document.getElementById('status-left').innerText =
+            "Playing: " + (currentSongInfo ? currentSongInfo.trackName : "Unknown");
+
+        const btn = document.getElementById('manual-btn');
+        if(btn) btn.style.display = 'none';
+
+        if(syncInterval) clearInterval(syncInterval);
+        syncInterval = setInterval(checkSync, 100);   // 0.1초 간격[web:15]
+    } else if (e.data === YT.PlayerState.ENDED || e.data === YT.PlayerState.PAUSED) {
+        if(syncInterval) clearInterval(syncInterval);
+    }
+}
+
+/* G. 싱크 체크 */
+function checkSync() {
+    if(!player || !player.getCurrentTime) return;
+    const t = player.getCurrentTime();
+    let idx = -1;
+
+    for(let i = 0; i < lyricsData.length; i++) {
+        if(t >= lyricsData[i].time) idx = i;
+        else break;
+    }
+
+    if(idx !== -1 && idx !== lastPrintedIndex) {
+        clearTimeouts();
+        printLyricByIndex(idx);
+        lastPrintedIndex = idx;
+    }
+}
+
+/* H. 수동 URL 로딩 */
+function loadVideoFromUrl(url) {
+    let videoId = null;
+
+    if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1].split('?')[0];
+    } else if (url.includes('v=')) {
+        videoId = url.split('v=')[1].split('&')[0];
+    } else if (url.includes('/embed/')) {
+        videoId = url.split('/embed/')[1].split('?')[0];
+    }
+
+    if (videoId) {
+        printLog(`Override: Loading Video ID [${videoId}]...`);
+        if(player && player.loadVideoById) {
+            player.stopVideo();
+            player.loadVideoById(videoId);
+            player.playVideo();
+
+            if(syncInterval) clearInterval(syncInterval);
+            lastPrintedIndex = -1;
+        }
+    } else {
+        alert("유효하지 않은 유튜브 URL입니다.");
+    }
+}
 </script>
 </body>
 </html>
